@@ -1,1 +1,6 @@
-
+Classes:
+	•	ProductCatalog GUI: Handles the graphical user interface for browsing, searching, and filtering products in the catalog.
+	•	ProductCatalog: Manages the logic for storing and manipulating product data.
+Topics:
+	•	ArrayList (storing the products): Use an ArrayList to store product information such as names, prices, categories, and descriptions.
+	•	Sorting algorithms (for sorting the products): Implement sorting algorithms to sort products based on criteria like price, alphabetical order, or product category
