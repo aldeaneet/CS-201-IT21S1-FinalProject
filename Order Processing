@@ -1,0 +1,7 @@
+Classes:
+-OrderProcessing GUI: Handles the graphical interface for thg order processing system.
+-Orderprocessing: Manages the core logic for processing and storing orders.
+
+Topics:
+-ArrayList (Storing teh orders): Use an arrayList to store order details like item names, quantities, and prices.
+-Sortin algorithms (for sorting the orders): Implement sorting algorithms (like bubble sort, merge sort, or quicksort) to organize the orders based on criteria such as total price, order date, or customer name.
