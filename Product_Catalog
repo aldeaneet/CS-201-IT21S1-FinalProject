@@ -1,0 +1,51 @@
+package PRODUCT_CATALOG;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Product_Catalog {
+	// Data structure to store products
+    private HashMap<String, Product_Class> catalog = new HashMap<>();
+
+    // Method to add a new product
+    public void addProduct(Product_Class product) {
+        catalog.put(product.getProductId(), product);
+        System.out.println("Product added: " + product.getName());
+    }
+
+    // Method to remove a product by ID
+    public void removeProduct(String productId) {
+        Product_Class removedProduct = catalog.remove(productId);
+        if (removedProduct != null) {
+            System.out.println("Product removed: " + removedProduct.getName());
+        } else {
+            System.out.println("Product not found.");
+        }
+    }
+
+    // Method to update an existing product
+    public void updateProduct(String productId, Product_Class updatedProduct) {
+        if (catalog.containsKey(productId)) {
+            catalog.put(productId, updatedProduct);
+            System.out.println("Product updated: " + updatedProduct.getName());
+        } else {
+            System.out.println("Product not found.");
+        }
+    }
+
+    // Method to get product details by ID
+    public Product_Class getProduct(String string) {
+        return catalog.get(string);
+    }
+
+    // Method to display all products
+    public void displayProducts() {
+        if (catalog.isEmpty()) {
+            System.out.println("No products available in the catalog.");
+        } else {
+            for (Map.Entry<String, Product_Class> entry : catalog.entrySet()) {
+                System.out.println(entry.getValue());
+                System.out.println("------------");
+            }
+        }
+    }
+}
