@@ -1,0 +1,12 @@
+public class IsInStock {
+    private CheckStock checkStock;
+
+    public IsInStock(CheckStock checkStock) {
+        this.checkStock = checkStock;
+    }
+
+    public boolean isInStock(String productId, int quantity) {
+        return checkStock.checkStock(productId) >= quantity;
+    }
+}
+
