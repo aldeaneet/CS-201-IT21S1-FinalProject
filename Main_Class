@@ -1,0 +1,41 @@
+package PRODUCT_CATALOG;
+
+public class Main {
+	 public static void main(String[] args) {
+	        // Create some products
+	        Product_Class product1 = new Product_Class ();
+	        Product_Class product2 = new Product_Class();
+	        Product_Class product3 = new Product_Class ();
+
+	        // Create a ProductCatalog instance
+	        Product_Catalog catalog = new Product_Catalog();
+
+	        // Add products to the catalog
+	        catalog.addProduct(product1);
+	        catalog.addProduct(product2);
+	        catalog.addProduct(product3);
+
+	        // Display all products
+	        System.out.println("\nDisplaying all products:");
+	        catalog.displayProducts();
+
+	        // Get a specific product by ID
+	        System.out.println("\nRetrieving product with ID P002:");
+	        System.out.println(catalog.getProduct("P002"));
+
+	        // Update a product
+	        Product_Class updatedProduct = new Product_Class ();
+	        catalog.updateProduct("P001", updatedProduct);
+
+	        // Display all products after update
+	        System.out.println("\nDisplaying all products after update:");
+	        catalog.displayProducts();
+
+	        // Remove a product by ID
+	        catalog.removeProduct("P003");
+
+	        // Display all products after removal
+	        System.out.println("\nDisplaying all products after removal:");
+	        catalog.displayProducts();
+	    }
+	}
