@@ -1,0 +1,22 @@
+import java.util.ArrayList;
+
+public class UpdateStock {
+    private ArrayList<String> productIds;
+    private ArrayList<Integer> stocks;
+
+    public UpdateStock(ArrayList<String> productIds, ArrayList<Integer> stocks) {
+        this.productIds = productIds;
+        this.stocks = stocks;
+    }
+
+    public void updateStock(String productId, int quantity) {
+        int index = productIds.indexOf(productId);
+        if (index != -1) {
+            stocks.set(index, stocks.get(index) + quantity);
+        } else {
+            productIds.add(productId);
+            stocks.add(quantity);
+        }
+    }
+}
+
