@@ -35,14 +35,6 @@ The primary objectives of this project are to:
    - Built using Java Swing/JavaFX for an interactive experience.
    - Allows users to view products, add them to the cart, and complete orders.
 
-## Installation
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/yourusername/online-retail-store.git
-   ```
-2. Open the project in your preferred Java IDE (such as IntelliJ IDEA or Eclipse).
-3. Compile and run the `Main` class to launch the application.
-
 ## Usage
 - Browse products and add items to your shopping cart.
 - View your cart and update quantities or remove items as needed.
@@ -60,8 +52,6 @@ This project was developed by:
 ## Instructor
 Ms. Nila D. Santiago
 
-## Submission Date
-December 2024
 
 ## License
 This project is for educational purposes as part of the CS 201 course. All rights reserved to the authors.
