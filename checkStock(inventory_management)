@@ -1,0 +1,20 @@
+import java.util.ArrayList;
+
+public class CheckStock {
+    private ArrayList<String> productIds;
+    private ArrayList<Integer> stocks;
+
+    public CheckStock(ArrayList<String> productIds, ArrayList<Integer> stocks) {
+        this.productIds = productIds;
+        this.stocks = stocks;
+    }
+
+    public int checkStock(String productId) {
+        int index = productIds.indexOf(productId);
+        if (index != -1) {
+            return stocks.get(index);
+        }
+        return 0; // If product is not found, return 0 stock
+    }
+}
+
