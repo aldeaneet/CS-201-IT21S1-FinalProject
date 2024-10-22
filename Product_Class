@@ -1,0 +1,70 @@
+package PRODUCT_CATALOG;
+
+public class Product_Class {
+	private String productId;
+    private String name;
+    private String description;
+    private double price;
+    private int stockLevel;
+
+    // Constructor
+    public void Product(String productId, String name, String description, double price, int stockLevel) {
+        this.productId = productId;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.stockLevel = stockLevel;
+    }
+
+    // Getters and Setters
+    public String getProductId1() {
+        return productId;
+    }
+
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public int getStockLevel() {
+        return stockLevel;
+    }
+
+    public void setStockLevel(int stockLevel) {
+        this.stockLevel = stockLevel;
+    }
+
+    @Override
+    public String toString() {
+        return "Product ID: " + productId + "\nName: " + name + "\nDescription: " + description + 
+               "\nPrice: $" + price + "\nStock Level: " + stockLevel;
+    }
+
+	public String getProductId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+}
