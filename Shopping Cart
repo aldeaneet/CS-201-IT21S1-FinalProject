@@ -1,0 +1,59 @@
+package ShoppingCart;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import java.util.ArrayList;
+
+public class SCart {
+    private ArrayList<CartItem> cartItems;
+
+    
+    public SCart() {
+        this.cartItems = new ArrayList<>();
+    }
+
+    
+    public void addItem(String productId, int quantity, double price) {
+        CartItem shoe = new CartItem(productId, quantity, price);
+        cartItems.add(shoe);
+    }
+
+    
+    public void removeItem(String productId) {
+        cartItems.removeIf(item -> item.getProductId().equals(productId));
+    }
+    
+    public void updateQuantity(String productId, int newQuantity, double price) {
+        for (CartItem item : cartItems) {
+            if (item.getProductId().equals(productId)) {
+                item.setQuantity(newQuantity);
+                item.updateSubtotal(price);
+                break;
+            }
+        }
+    }
+
+    
+    public double calculateTotal() {
+        double total = 0.0;
+        for (CartItem item : cartItems) {
+            total += item.getSubtotal();
+        }
+        return total;
+    }
+
+    
+    public void clearCart() {
+        cartItems.clear();
+    }
+
+    
+    public void displayCartItems() {
+        for (CartItem item : cartItems) {
+            System.out.println("Product ID: " + item.getProductId() +
+                               ", Quantity: " + item.getQuantity() +
+                               ", Subtotal: " + item.getSubtotal());
+        }
+    }
+}
