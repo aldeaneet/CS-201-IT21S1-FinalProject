@@ -1,0 +1,79 @@
+package RetailStore;
+
+import java.util.ArrayList;
+
+public class Order {
+    private String orderId;
+    private String orderDate;
+    private String customerName;
+    private ArrayList<CartItem> items;
+    private double totalAmount;
+    private String status;
+
+    public Order(String orderId, String orderDate, String customerName) {
+        this.orderId = orderId;
+        this.orderDate = orderDate;
+        this.customerName = customerName;
+        this.items = new ArrayList<>();
+        this.status = "Pending";  // Default status is "Pending"
+    }
+
+    // Method to add a CartItem to the order
+    public void addItem(CartItem item) {
+        items.add(item);
+    }
+
+    // Method to calculate the total cost of the order
+    public void calculateTotal() {
+        totalAmount = 0;
+        for (CartItem item : items) {
+            totalAmount += item.getPrice() * item.getQuantity();
+        }
+    }
+
+    // Method to retrieve order details
+    public String getOrderDetails() {
+        StringBuilder details = new StringBuilder();
+        details.append("Order ID: ").append(orderId)
+               .append("\nCustomer: ").append(customerName)
+               .append("\nDate: ").append(orderDate)
+               .append("\nStatus: ").append(status)
+               .append("\nTotal Amount: $").append(totalAmount)
+               .append("\nItems:\n");
+
+        for (CartItem item : items) {
+            details.append(item.toString()).append("\n");
+        }
+        return details.toString();
+    }
+
+    // Method to update order status
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    // Getters and setters for other attributes
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public String getOrderDate() {
+        return orderDate;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public ArrayList<CartItem> getItems() {
+        return items;
+    }
+
+    public double getTotalAmount() {
+        return totalAmount;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+}
