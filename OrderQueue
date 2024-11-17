@@ -1,0 +1,51 @@
+package RetailStore;
+
+import java.util.LinkedList;
+import java.util.Queue;
+
+public class OrderQueue {
+
+    private Queue<Order> orderQueue;
+
+    public OrderQueue() {
+        this.orderQueue = new LinkedList<>();
+    }
+
+    // Adds an order to the queue
+    public void enqueueOrder(Order order) {
+        orderQueue.add(order);
+        System.out.println("Order " + order.getOrderId() + " added to the queue.");
+    }
+
+    // Processes the next order in the queue
+    public Order dequeueOrder() {
+        if (orderQueue.isEmpty()) {
+            System.out.println("No orders in the queue.");
+            return null;
+        }
+        Order order = orderQueue.poll();
+        System.out.println("Processing Order " + order.getOrderId());
+        return order;
+    }
+
+    // Shows the next order in the queue without processing it
+    public Order peekOrder() {
+        if (orderQueue.isEmpty()) {
+            System.out.println("No orders in the queue.");
+            return null;
+        }
+        Order order = orderQueue.peek();
+        System.out.println("Next order in the queue: " + order.getOrderId());
+        return order;
+    }
+
+    // Check if the queue is empty
+    public boolean isEmpty() {
+        return orderQueue.isEmpty();
+    }
+
+    // Get the size of the queue
+    public int getQueueSize() {
+        return orderQueue.size();
+    }
+}
