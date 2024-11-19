@@ -1,49 +1,48 @@
-package PRODUCT_CATALOG;
+package RetailStore;
+
 import java.util.HashMap;
 import java.util.Map;
 
-public class Product_Catalog {
-	// Data structure to store products
-    private HashMap<String, Product_Class> catalog = new HashMap<>();
+public class ProductCatalog {
+    private HashMap<String, Product> catalog = new HashMap<>();
 
-    // Method to add a new product
-    public void addProduct(Product_Class product) {
+    public void addProduct(Product product) {
         catalog.put(product.getProductId(), product);
         System.out.println("Product added: " + product.getName());
     }
 
-    // Method to remove a product by ID
     public void removeProduct(String productId) {
-        Product_Class removedProduct = catalog.remove(productId);
-        if (removedProduct != null) {
-            System.out.println("Product removed: " + removedProduct.getName());
+        if (catalog.containsKey(productId)) {
+            catalog.remove(productId);
+            System.out.println("Product removed: " + productId);
         } else {
-            System.out.println("Product not found.");
+            System.out.println("Product not found: " + productId);
         }
     }
 
-    // Method to update an existing product
-    public void updateProduct(String productId, Product_Class updatedProduct) {
+    public void updateProduct(String productId, Product updatedProduct) {
         if (catalog.containsKey(productId)) {
             catalog.put(productId, updatedProduct);
             System.out.println("Product updated: " + updatedProduct.getName());
         } else {
-            System.out.println("Product not found.");
+            System.out.println("Product not found: " + productId);
         }
     }
 
-    // Method to get product details by ID
-    public Product_Class getProduct(String string) {
-        return catalog.get(string);
+    public Product getProduct(String productId) {
+        return catalog.get(productId);
     }
 
-    // Method to display all products
+    public Map<String, Product> getCatalog() {
+        return catalog;
+    }
+
     public void displayProducts() {
         if (catalog.isEmpty()) {
             System.out.println("No products available in the catalog.");
         } else {
-            for (Map.Entry<String, Product_Class> entry : catalog.entrySet()) {
-                System.out.println(entry.getValue());
+            for (Product product : catalog.values()) {
+                System.out.println(product);
                 System.out.println("------------");
             }
         }
