@@ -1,17 +1,18 @@
 package RetailStore;
 
 import javax.swing.*;
-import java.awt.EventQueue;
+import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.awt.Image;
-import java.awt.Color;
-import java.awt.Font;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainWindow {
 
     private JFrame frame;
     private ProductCatalog productCatalog;
+    private ShoppingCart shoppingCart;
+    private List<Order> orderHistory;
 
     /**
      * Launch the application.
@@ -32,6 +33,8 @@ public class MainWindow {
      */
     public MainWindow() {
         productCatalog = new ProductCatalog();
+        shoppingCart = new ShoppingCart();
+        orderHistory = new ArrayList<>();
         initialize();
     }
 
@@ -39,34 +42,14 @@ public class MainWindow {
      * Initialize the contents of the frame.
      */
     private void initialize() {
-        frame = new JFrame();
-        frame.getContentPane().setBackground(new Color(251, 251, 242));
-        frame.setBounds(100, 100, 450, 300);
+        frame = new JFrame("Retail Store Management");
+        frame.getContentPane().setBackground(new Color(249, 254, 226));
+        frame.setBounds(100, 100, 615, 350);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        JButton btnOpenWindow1 = new JButton("Manage Products");
-        btnOpenWindow1.setBackground(new Color(247, 213, 218));
-        btnOpenWindow1.setBounds(50, 204, 150, 50);
-        btnOpenWindow1.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                new Window1(productCatalog); 
-            }
-        });
         frame.getContentPane().setLayout(null);
-        frame.getContentPane().add(btnOpenWindow1);
-
-        JButton btnOpenWindow2 = new JButton("View Products");
-        btnOpenWindow2.setBackground(new Color(217, 211, 248));
-        btnOpenWindow2.setBounds(250, 204, 150, 50);
-        btnOpenWindow2.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                new Window2(productCatalog); 
-            }
-        });
-        frame.getContentPane().add(btnOpenWindow2);
 
         JLabel lblLogo = new JLabel("");
-        lblLogo.setBounds(200, 20, 50, 50);
+        lblLogo.setBounds(271, 0, 56, 50);
         frame.getContentPane().add(lblLogo);
 
         try {
@@ -78,16 +61,66 @@ public class MainWindow {
             e.printStackTrace();
         }
 
-        JLabel lblNewLabel = new JLabel("RmanageR alpha 1.0");
-        lblNewLabel.setFont(new Font("Segoe UI Light", Font.PLAIN, 10));
-        lblNewLabel.setBounds(10, 11, 100, 24);
+        JButton btnManageProducts = new JButton("Manage Products");
+        btnManageProducts.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 18));
+        frame.getContentPane().add(btnManageProducts);
+        btnManageProducts.setBounds(393, 93, 200, 100);
+        btnManageProducts.setBackground(new Color(247, 213, 218));
+
+        JButton btnViewProducts = new JButton("View Products");
+        btnViewProducts.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 18));
+        frame.getContentPane().add(btnViewProducts);
+        btnViewProducts.setBounds(393, 204, 200, 100);
+        btnViewProducts.setBackground(new Color(217, 211, 248));
+
+        JButton btnProductCatalog = new JButton("Product Catalog");
+        btnProductCatalog.setBackground(new Color(208, 231, 184));
+        btnProductCatalog.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
+        frame.getContentPane().add(btnProductCatalog);
+        btnProductCatalog.setBounds(10, 93, 200, 100);
+
+        JLabel lblNewLabel = new JLabel("SEE PRODUCTS");
+        lblNewLabel.setForeground(new Color(65, 135, 126));
+        lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        lblNewLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
+        lblNewLabel.setBounds(10, 24, 200, 50);
         frame.getContentPane().add(lblNewLabel);
 
-        JLabel lblNewLabel_1 = new JLabel("RmanageR");
-        lblNewLabel_1.setForeground(new Color(113, 189, 132));
-        lblNewLabel_1.setFont(new Font("Lucida Sans", Font.BOLD, 30));
-        lblNewLabel_1.setHorizontalAlignment(SwingConstants.CENTER);
-        lblNewLabel_1.setBounds(124, 108, 188, 34);
-        frame.getContentPane().add(lblNewLabel_1);
+        JButton btnViewPurchaseHistory = new JButton("Order History");
+        btnViewPurchaseHistory.setBackground(new Color(182, 233, 232));
+        btnViewPurchaseHistory.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 20));
+        btnViewPurchaseHistory.setBounds(10, 204, 200, 100);
+        frame.getContentPane().add(btnViewPurchaseHistory);
+
+        JLabel lblManageProducts = new JLabel("MANAGE PRODUCTS");
+        lblManageProducts.setHorizontalAlignment(SwingConstants.CENTER);
+        lblManageProducts.setForeground(new Color(65, 135, 126));
+        lblManageProducts.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 18));
+        lblManageProducts.setBounds(393, 24, 200, 50);
+        frame.getContentPane().add(lblManageProducts);
+
+        btnProductCatalog.addActionListener(e -> {
+            ProductCatalogView catalogView = new ProductCatalogView(productCatalog, shoppingCart, new OrderQueue(), orderHistory);
+            catalogView.display();
+        });
+
+        btnViewProducts.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                new Window2(productCatalog);
+            }
+        });
+
+        btnManageProducts.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                new Window1(productCatalog);
+            }
+        });
+
+        btnViewPurchaseHistory.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                OrderHistoryView orderHistoryView = new OrderHistoryView(orderHistory);
+                orderHistoryView.display();
+            }
+        });
     }
 }
