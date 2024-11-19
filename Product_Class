@@ -1,14 +1,13 @@
-package PRODUCT_CATALOG;
+package RetailStore;
 
-public class Product_Class {
-	private String productId;
+public class Product {
+    private String productId;
     private String name;
     private String description;
     private double price;
     private int stockLevel;
 
-    // Constructor
-    public void Product(String productId, String name, String description, double price, int stockLevel) {
+    public Product(String productId, String name, String description, double price, int stockLevel) {
         this.productId = productId;
         this.name = name;
         this.description = description;
@@ -16,8 +15,7 @@ public class Product_Class {
         this.stockLevel = stockLevel;
     }
 
-    // Getters and Setters
-    public String getProductId1() {
+    public String getProductId() {
         return productId;
     }
 
@@ -57,14 +55,13 @@ public class Product_Class {
         this.stockLevel = stockLevel;
     }
 
-    @Override
-    public String toString() {
-        return "Product ID: " + productId + "\nName: " + name + "\nDescription: " + description + 
-               "\nPrice: $" + price + "\nStock Level: " + stockLevel;
+    public int getStock() {
+        return stockLevel;
     }
 
-	public String getProductId() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public String toString() {
+        return "Product ID: " + productId + "\nName: " + name + "\nDescription: " + description +
+               "\nPrice: $" + price + "\nStock Level: " + stockLevel;
+    }
 }
