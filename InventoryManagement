@@ -1,0 +1,35 @@
+package RetailStore;
+
+import java.util.ArrayList;
+
+public class InventoryManagement {
+    private ArrayList<String> productIds;
+    private ArrayList<Integer> stocks;
+
+    public InventoryManagement() {
+        productIds = new ArrayList<>();
+        stocks = new ArrayList<>();
+    }
+
+    public void updateStock(String productId, int quantity) {
+        int index = productIds.indexOf(productId);
+        if (index != -1) {
+            stocks.set(index, stocks.get(index) + quantity);
+        } else {
+            productIds.add(productId);
+            stocks.add(quantity);
+        }
+    }
+
+    public int checkStock(String productId) {
+        int index = productIds.indexOf(productId);
+        if (index != -1) {
+            return stocks.get(index);
+        }
+        return 0;
+    }
+
+    public boolean isInStock(String productId, int quantity) {
+        return checkStock(productId) >= quantity;
+    }
+}
