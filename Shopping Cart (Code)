@@ -1,59 +1,46 @@
-package ShoppingCart;
-
-import java.util.ArrayList;
-import java.util.List;
+package RetailStore;
 
 import java.util.ArrayList;
 
-public class SCart {
-    private ArrayList<CartItem> cartItems;
+public class ShoppingCart {
+    private ArrayList<CartItem> items;
 
-    
-    public SCart() {
-        this.cartItems = new ArrayList<>();
+    public ShoppingCart() {
+        items = new ArrayList<>();
     }
 
-    
-    public void addItem(String productId, int quantity, double price) {
-        CartItem shoe = new CartItem(productId, quantity, price);
-        cartItems.add(shoe);
+    public void addItem(CartItem item) {
+        for (CartItem cartItem : items) {
+            if (cartItem.getProductId().equals(item.getProductId())) {
+                cartItem.setQuantity(cartItem.getQuantity() + item.getQuantity());
+                return;
+            }
+        }
+        items.add(item);
     }
 
-    
     public void removeItem(String productId) {
-        cartItems.removeIf(item -> item.getProductId().equals(productId));
+        items.removeIf(item -> item.getProductId().equals(productId));
     }
-    
-    public void updateQuantity(String productId, int newQuantity, double price) {
-        for (CartItem item : cartItems) {
+
+    public void updateItemQuantity(String productId, int newQuantity) {
+        for (CartItem item : items) {
             if (item.getProductId().equals(productId)) {
                 item.setQuantity(newQuantity);
-                item.updateSubtotal(price);
-                break;
+                return;
             }
         }
     }
 
-    
     public double calculateTotal() {
-        double total = 0.0;
-        for (CartItem item : cartItems) {
+        double total = 0;
+        for (CartItem item : items) {
             total += item.getSubtotal();
         }
         return total;
     }
 
-    
-    public void clearCart() {
-        cartItems.clear();
-    }
-
-    
-    public void displayCartItems() {
-        for (CartItem item : cartItems) {
-            System.out.println("Product ID: " + item.getProductId() +
-                               ", Quantity: " + item.getQuantity() +
-                               ", Subtotal: " + item.getSubtotal());
-        }
+    public ArrayList<CartItem> getItems() {
+        return items;
     }
 }
