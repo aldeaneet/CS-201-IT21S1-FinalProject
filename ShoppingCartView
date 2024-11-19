@@ -1,0 +1,92 @@
+package RetailStore;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
+
+public class ShoppingCartView {
+    private JFrame frame;
+    private ShoppingCart shoppingCart;
+    private ProductCatalog productCatalog;
+    private OrderQueue orderQueue;
+    private List<Order> orderHistory;
+
+    public ShoppingCartView(ShoppingCart shoppingCart, ProductCatalog productCatalog, OrderQueue orderQueue, List<Order> orderHistory) {
+        this.shoppingCart = shoppingCart;
+        this.productCatalog = productCatalog;
+        this.orderQueue = orderQueue;
+        this.orderHistory = orderHistory;
+        initialize();
+    }
+
+    private void initialize() {
+        frame = new JFrame("Shopping Cart");
+        frame.getContentPane().setBackground(new Color(170, 221, 171));
+        frame.setBounds(100, 100, 725, 425);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.getContentPane().setLayout(null);
+
+        JPanel cartPanel = new JPanel();
+        cartPanel.setBackground(new Color(236, 250, 199));
+        
+        cartPanel.setLayout(new BoxLayout(cartPanel, BoxLayout.Y_AXIS));
+        
+        JScrollPane scrollPane = new JScrollPane(cartPanel);
+        scrollPane.setBounds(0, 32, 713, 335);
+        frame.getContentPane().add(scrollPane);
+
+        List<CartItem> items = shoppingCart.getItems();
+        if (items.isEmpty()) {
+            JLabel lblEmptyCart = new JLabel("Your cart is empty.");
+            lblEmptyCart.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 16));
+            cartPanel.add(lblEmptyCart);
+        } else {
+            for (CartItem item : items) {
+                JPanel itemPanel = new JPanel();
+                itemPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+
+                JLabel lblName = new JLabel("Product: " + item.getProductName());
+                lblName.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 14));
+
+                JLabel lblSubtotal = new JLabel("Subtotal: $" + item.getSubtotal());
+                lblSubtotal.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 14));
+
+                JLabel lblQuantity = new JLabel("Quantity:");
+                JSpinner spinner = new JSpinner(new SpinnerNumberModel(item.getQuantity(), 1, 99, 1));
+                spinner.addChangeListener(e -> {
+                    int newQuantity = (int) spinner.getValue();
+                    item.setQuantity(newQuantity);
+                    lblSubtotal.setText("Subtotal: $" + item.getSubtotal());
+                });
+
+                itemPanel.add(lblName);
+                itemPanel.add(lblQuantity);
+                itemPanel.add(spinner);
+                itemPanel.add(lblSubtotal);
+
+                cartPanel.add(itemPanel);
+            }
+        }
+
+        JButton btnCheckout = new JButton("Proceed to Checkout");
+        btnCheckout.setBackground(new Color(248, 203, 143));
+        btnCheckout.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnCheckout.setBounds(0, 367, 713, 23);
+        btnCheckout.addActionListener(e -> {
+            CheckoutView checkoutView = new CheckoutView(shoppingCart, productCatalog, orderQueue, orderHistory);
+            checkoutView.display();
+            frame.dispose();
+        });
+        frame.getContentPane().add(btnCheckout);
+
+        JLabel lblTitle = new JLabel("Shopping Cart");
+        lblTitle.setBounds(0, 0, 713, 32);
+        lblTitle.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 24));
+        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        frame.getContentPane().add(lblTitle);
+    }
+
+    public void display() {
+        frame.setVisible(true);
+    }
+}
