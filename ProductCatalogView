@@ -1,0 +1,89 @@
+package RetailStore;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
+import java.util.Map;
+
+public class ProductCatalogView {
+    private JFrame frame;
+    private ProductCatalog catalog;
+    private ShoppingCart shoppingCart;
+    private OrderQueue orderQueue;
+    private List<Order> orderHistory;
+
+    public ProductCatalogView(ProductCatalog catalog, ShoppingCart shoppingCart, OrderQueue orderQueue, List<Order> orderHistory) {
+        this.catalog = catalog;
+        this.shoppingCart = shoppingCart;
+        this.orderQueue = orderQueue;
+        this.orderHistory = orderHistory;
+        initialize();
+    }
+
+    private void initialize() {
+        frame = new JFrame("Product Catalog");
+        frame.getContentPane().setBackground(new Color(236, 250, 199));
+        frame.setBounds(100, 100, 800, 500);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.getContentPane().setLayout(null);
+
+        JLabel lblTitle = new JLabel("Product Catalog");
+        lblTitle.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 24));
+        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTitle.setBounds(0, 0, 800, 50);
+        frame.getContentPane().add(lblTitle);
+
+        JPanel productPanel = new JPanel();
+        JScrollPane scrollPane = new JScrollPane(productPanel);
+        scrollPane.setBounds(10, 60, 768, 350);
+        frame.getContentPane().add(scrollPane);
+        productPanel.setLayout(new GridLayout(0, 1));
+
+        JButton btnCart = new JButton("CART");
+        btnCart.setBackground(new Color(250, 224, 171));
+        btnCart.setBounds(320, 421, 149, 30);
+        frame.getContentPane().add(btnCart);
+
+        refreshProductPanel(productPanel);
+
+        btnCart.addActionListener(e -> {
+            ShoppingCartView cartView = new ShoppingCartView(shoppingCart, catalog, orderQueue, orderHistory);
+            cartView.display();
+        });
+    }
+
+    private void refreshProductPanel(JPanel productPanel) {
+        productPanel.removeAll();
+        Map<String, Product> products = catalog.getCatalog();
+
+        for (Product product : products.values()) {
+            JPanel productInfoPanel = new JPanel();
+            productInfoPanel.setLayout(new GridLayout(0, 1));
+
+            JLabel lblName = new JLabel("Name: " + product.getName());
+            JLabel lblDescription = new JLabel("Description: " + product.getDescription());
+            JLabel lblPrice = new JLabel("Price: $" + product.getPrice());
+            JLabel lblStock = new JLabel("Stock: " + product.getStockLevel());
+
+            productInfoPanel.add(lblName);
+            productInfoPanel.add(lblDescription);
+            productInfoPanel.add(lblPrice);
+            productInfoPanel.add(lblStock);
+
+            JButton btnAddToCart = new JButton("Add to Cart");
+            btnAddToCart.addActionListener(e -> {
+                shoppingCart.addItem(new CartItem(product, 1));
+                JOptionPane.showMessageDialog(frame, product.getName() + " added to cart!");
+            });
+
+            productInfoPanel.add(btnAddToCart);
+            productPanel.add(productInfoPanel);
+        }
+        productPanel.revalidate();
+        productPanel.repaint();
+    }
+
+    public void display() {
+        frame.setVisible(true);
+    }
+}
