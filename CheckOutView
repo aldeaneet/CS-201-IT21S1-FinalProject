@@ -1,0 +1,98 @@
+package RetailStore;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+
+public class CheckoutView {
+    private JFrame frame;
+    private ShoppingCart cart;
+    private ProductCatalog productCatalog;
+    private OrderQueue orderQueue;
+    private List<Order> orderHistory;
+
+    public CheckoutView(ShoppingCart cart, ProductCatalog productCatalog, OrderQueue orderQueue, List<Order> orderHistory) {
+        this.cart = cart;
+        this.productCatalog = productCatalog;
+        this.orderQueue = orderQueue;
+        this.orderHistory = orderHistory;
+        initialize();
+    }
+
+    private void initialize() {
+        frame = new JFrame("Checkout");
+        frame.getContentPane().setBackground(new Color(226, 248, 227));
+        frame.setBounds(100, 100, 600, 400);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.getContentPane().setLayout(null);
+
+        JLabel lblTitle = new JLabel("Checkout");
+        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTitle.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
+        lblTitle.setBounds(10, 10, 570, 30);
+        frame.getContentPane().add(lblTitle);
+
+        JLabel totalLabel = new JLabel("Total: $" + cart.calculateTotal());
+        totalLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        totalLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 18));
+        totalLabel.setBounds(10, 100, 570, 30);
+        frame.getContentPane().add(totalLabel);
+
+        JButton btnPlaceOrder = new JButton("Place Order");
+        btnPlaceOrder.setBackground(new Color(251, 218, 164));
+        btnPlaceOrder.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnPlaceOrder.setBounds(95, 264, 150, 40);
+        frame.getContentPane().add(btnPlaceOrder);
+
+        JButton btnBack = new JButton("Back");
+        btnBack.setBackground(new Color(251, 218, 164));
+        btnBack.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnBack.setBounds(380, 264, 150, 40);
+        frame.getContentPane().add(btnBack);
+
+        btnPlaceOrder.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (cart.getItems().isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "Your cart is empty. Add items to checkout.");
+                    return;
+                }
+
+                boolean stockAvailable = true;
+                for (CartItem item : cart.getItems()) {
+                    Product product = productCatalog.getProduct(item.getProductId());
+                    if (product.getStockLevel() < item.getQuantity()) {
+                        JOptionPane.showMessageDialog(frame,
+                                "Insufficient stock for: " + product.getName());
+                        stockAvailable = false;
+                        break;
+                    }
+                }
+
+                if (stockAvailable) {
+                    for (CartItem item : cart.getItems()) {
+                        Product product = productCatalog.getProduct(item.getProductId());
+                        product.setStockLevel(product.getStockLevel() - item.getQuantity());
+                    }
+
+                    Order order = new Order("ORD" + System.currentTimeMillis(), "Today", "Customer");
+                    order.getItems().addAll(cart.getItems());
+                    order.calculateTotal();
+                    orderQueue.enqueueOrder(order);
+                    orderHistory.add(order);
+                    cart.getItems().clear();
+
+                    JOptionPane.showMessageDialog(frame, "Order placed successfully!");
+                    frame.dispose();
+                }
+            }
+        });
+
+        btnBack.addActionListener(e -> frame.dispose());
+    }
+
+    public void display() {
+        frame.setVisible(true);
+    }
+}
