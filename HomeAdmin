@@ -1,0 +1,72 @@
+package RetailStore;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class HomeAdmin extends JFrame {
+    private ProductCatalog productCatalog;
+    private User user;
+
+    public HomeAdmin(User user, ProductCatalog productCatalog) {
+        this.user = user;
+        this.productCatalog = productCatalog;
+        initialize();
+    }
+
+    private void initialize() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setBounds(100, 100, 704, 409);
+        JPanel contentPane = new JPanel();
+        contentPane.setLayout(null);
+        setContentPane(contentPane);
+
+        // Header panel
+        Panel headerPanel = new Panel();
+        headerPanel.setBackground(new Color(0, 0, 0));
+        headerPanel.setBounds(0, 0, 700, 50);
+        headerPanel.setLayout(null);
+        contentPane.add(headerPanel);
+
+        JLabel lblUsername = new JLabel("Welcome, Admin: " + user.getUsername());
+        lblUsername.setForeground(new Color(255, 255, 255));
+        lblUsername.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 14));
+        lblUsername.setBounds(10, 10, 400, 30);
+        lblUsername.setOpaque(false);
+        headerPanel.add(lblUsername);
+
+        JButton btnLogout = new JButton("Logout");
+        btnLogout.setBackground(new Color(123, 176, 242));
+        btnLogout.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnLogout.setBounds(607, 10, 71, 30);
+        btnLogout.addActionListener(e -> {
+            dispose();
+            new SignIn().setVisible(true);
+        });
+        headerPanel.add(btnLogout);
+
+        JButton btnManageProducts = new JButton("Manage Products");
+        btnManageProducts.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnManageProducts.setBackground(new Color(165, 235, 252));
+        btnManageProducts.setBounds(482, 55, 200, 50);
+        contentPane.add(btnManageProducts);
+
+        JButton btnViewProducts = new JButton("View Products");
+        btnViewProducts.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnViewProducts.setBackground(new Color(165, 235, 252));
+        btnViewProducts.setBounds(482, 116, 200, 50);
+        contentPane.add(btnViewProducts);
+        
+        JLabel lblNewLabel = new JLabel("\r\n");
+        lblNewLabel.setIcon(new ImageIcon(HomeAdmin.class.getResource("/images/Admin.png")));
+        lblNewLabel.setBounds(10, 56, 460, 300);
+        contentPane.add(lblNewLabel);
+
+        // Updated Action Listeners
+        btnManageProducts.addActionListener(e -> new ManageProducts(productCatalog));
+        btnViewProducts.addActionListener(e -> new ViewProducts(productCatalog)); // Redirect to ViewProducts
+    }
+
+    public void display() {
+        setVisible(true);
+    }
+}
