@@ -1,51 +1,23 @@
 package RetailStore;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Order {
     private String orderId;
     private String orderDate;
-    private String customerName;
-    private ArrayList<CartItem> items;
+    private String customerId;
     private double totalAmount;
+    private List<CartItem> items;
     private String status;
 
-    public Order(String orderId, String orderDate, String customerName) {
+    public Order(String orderId, String orderDate, String customerId) {
         this.orderId = orderId;
         this.orderDate = orderDate;
-        this.customerName = customerName;
+        this.customerId = customerId;
         this.items = new ArrayList<>();
-        this.status = "Succesful";
-    }
-
-    public void addItem(CartItem item) {
-        items.add(item);
-    }
-
-    public void calculateTotal() {
-        totalAmount = 0;
-        for (CartItem item : items) {
-            totalAmount += item.getSubtotal() * item.getQuantity();
-        }
-    }
-
-    public String getOrderDetails() {
-        StringBuilder details = new StringBuilder();
-        details.append("Order ID: ").append(orderId)
-               .append("\nCustomer: ").append(customerName)
-               .append("\nDate: ").append(orderDate)
-               .append("\nStatus: ").append(status)
-               .append("\nTotal Amount: $").append(totalAmount)
-               .append("\nItems:\n");
-
-        for (CartItem item : items) {
-            details.append(item.toString()).append("\n");
-        }
-        return details.toString();
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
+        this.totalAmount = 0.0;
+        this.status = "Pending";
     }
 
     public String getOrderId() {
@@ -56,19 +28,34 @@ public class Order {
         return orderDate;
     }
 
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public ArrayList<CartItem> getItems() {
-        return items;
+    public String getCustomerId() {
+        return customerId;
     }
 
     public double getTotalAmount() {
         return totalAmount;
     }
 
+    public List<CartItem> getItems() {
+        return items;
+    }
+
+    public void addItem(CartItem item) {
+        this.items.add(item);
+    }
+
+    public void calculateTotal() {
+        this.totalAmount = 0.0;
+        for (CartItem item : items) {
+            this.totalAmount += item.getQuantity() * item.getUnitPrice();
+        }
+    }
+
     public String getStatus() {
         return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
