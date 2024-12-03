@@ -3,56 +3,221 @@ package RetailStore;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class OrderHistoryView {
     private JFrame frame;
-    private JTable orderTable;
-    private DefaultTableModel model;
-    private List<Order> orderHistory;
+    private JTable table;
+    private DefaultTableModel tableModel;
+    private User user;
 
-    public OrderHistoryView(List<Order> orderHistory) {
-        this.orderHistory = orderHistory;
+    /**
+     * @wbp.parser.constructor
+     */
+    public OrderHistoryView() {
+        this.user = UserSession.getCurrentUser();
+        initialize();
+    }
+
+    public OrderHistoryView(int userId, String username) {
+        this.user = new User(userId, username, false);
         initialize();
     }
 
     private void initialize() {
         frame = new JFrame("Order History");
-        frame.getContentPane().setBackground(new Color(231, 247, 213));
-        frame.setBounds(100, 100, 700, 400);
+        frame.getContentPane().setBackground(new Color(209, 209, 209));
+        frame.setBounds(100, 100, 800, 600);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.getContentPane().setLayout(null);
 
-        JLabel lblTitle = new JLabel("Order History");
+        JLabel lblTitle = new JLabel("Order History for " + user.getUsername());
+        lblTitle.setForeground(Color.WHITE);
+        lblTitle.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 24));
         lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitle.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
-        lblTitle.setBounds(10, 10, 670, 30);
+        lblTitle.setBounds(0, 0, 800, 50);
         frame.getContentPane().add(lblTitle);
 
-        String[] columnNames = {"Order ID", "Customer", "Date", "Total", "Status"};
-        model = new DefaultTableModel(columnNames, 0);
-        orderTable = new JTable(model);
-        orderTable.setBackground(new Color(253, 251, 210));
-        orderTable.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
-        JScrollPane scrollPane = new JScrollPane(orderTable);
-        scrollPane.setBounds(10, 50, 670, 250);
+        tableModel = new DefaultTableModel(new String[]{"Order ID", "Order Date", "Total Amount", "Status", "Payment Method", "Products"}, 0);
+        table = new JTable(tableModel);
+
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBounds(10, 60, 768, 440);
         frame.getContentPane().add(scrollPane);
 
+        JComboBox<String> comboBox = new JComboBox<>(new String[]{
+                "Sort by descending order Date",
+                "Sort by ascending order Date",
+                "Sort by descending order Total Amount",
+                "Sort by ascending order Total Amount"
+        });
+        comboBox.setBounds(20, 520, 300, 30);
+        frame.getContentPane().add(comboBox);
+
         JButton btnBack = new JButton("Back");
-        btnBack.setBackground(new Color(245, 206, 154));
-        btnBack.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
-        btnBack.setBounds(278, 311, 150, 40);
+        btnBack.setBackground(new Color(152, 207, 252));
+        btnBack.setBounds(688, 520, 90, 30);
         frame.getContentPane().add(btnBack);
 
-        for (Order order : orderHistory) {
-            model.addRow(new Object[]{order.getOrderId(), order.getCustomerName(), order.getOrderDate(),
-                                      "$" + order.getTotalAmount(), order.getStatus()});
-        }
+        JPanel panel = new JPanel();
+        panel.setBackground(Color.BLACK);
+        panel.setBounds(0, 0, 788, 50);
+        frame.getContentPane().add(panel);
+
+        comboBox.addActionListener(e -> {
+            String selectedItem = (String) comboBox.getSelectedItem();
+            if (selectedItem != null) {
+                switch (selectedItem) {
+                    case "Sort by descending order Date":
+                        populateTable("DESC", "OrderDate");
+                        break;
+                    case "Sort by ascending order Date":
+                        populateTable("ASC", "OrderDate");
+                        break;
+                    case "Sort by descending order Total Amount":
+                        populateTable("DESC", "TotalAmount");
+                        break;
+                    case "Sort by ascending order Total Amount":
+                        populateTable("ASC", "TotalAmount");
+                        break;
+                }
+            }
+        });
 
         btnBack.addActionListener(e -> frame.dispose());
+
+        populateTable("DESC", "OrderDate");
+    }
+
+    private void populateTable(String sortOrder, String column) {
+        tableModel.setRowCount(0);
+
+        List<OrderHistory> orders = fetchOrderHistory();
+        quickSort(orders, 0, orders.size() - 1, sortOrder, column);
+
+        for (OrderHistory order : orders) {
+            tableModel.addRow(new Object[]{
+                    order.getOrderId(),
+                    order.getOrderDate(),
+                    String.format("$%.2f", order.getTotalAmount()),
+                    order.getStatus(),
+                    order.getPaymentMethod(),
+                    order.getProducts()
+            });
+        }
+    }
+
+    private List<OrderHistory> fetchOrderHistory() {
+        List<OrderHistory> orders = new ArrayList<>();
+        String query = "SELECT * FROM orderhistory WHERE customerId = ?";
+
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/solesociety", "root", "1234");
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, user.getId());
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                orders.add(new OrderHistory(
+                        rs.getString("orderId"),
+                        rs.getDate("orderDate"),
+                        rs.getDouble("totalAmount"),
+                        rs.getString("status"),
+                        rs.getString("paymentMethod"),  // Fetch payment method
+                        rs.getString("products")
+                ));
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(frame, "Error fetching order history: " + e.getMessage(),
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return orders;
+    }
+
+    private void quickSort(List<OrderHistory> orders, int low, int high, String sortOrder, String column) {
+        if (low < high) {
+            int partitionIndex = partition(orders, low, high, sortOrder, column);
+
+            quickSort(orders, low, partitionIndex - 1, sortOrder, column);
+            quickSort(orders, partitionIndex + 1, high, sortOrder, column);
+        }
+    }
+
+    private int partition(List<OrderHistory> orders, int low, int high, String sortOrder, String column) {
+        OrderHistory pivot = orders.get(high);
+        int i = low - 1;
+
+        for (int j = low; j < high; j++) {
+            boolean condition;
+            if (column.equals("OrderDate")) {
+                condition = sortOrder.equals("ASC")
+                        ? orders.get(j).getOrderDate().before(pivot.getOrderDate())
+                        : orders.get(j).getOrderDate().after(pivot.getOrderDate());
+            } else {
+                condition = sortOrder.equals("ASC")
+                        ? orders.get(j).getTotalAmount() < pivot.getTotalAmount()
+                        : orders.get(j).getTotalAmount() > pivot.getTotalAmount();
+            }
+
+            if (condition) {
+                i++;
+                OrderHistory temp = orders.get(i);
+                orders.set(i, orders.get(j));
+                orders.set(j, temp);
+            }
+        }
+
+        OrderHistory temp = orders.get(i + 1);
+        orders.set(i + 1, orders.get(high));
+        orders.set(high, temp);
+
+        return i + 1;
     }
 
     public void display() {
         frame.setVisible(true);
+    }
+}
+
+class OrderHistory {
+    private String orderId;
+    private Date orderDate;
+    private double totalAmount;
+    private String status;
+    private String paymentMethod;
+    private String products;
+
+    public OrderHistory(String orderId, Date orderDate, double totalAmount, String status, String paymentMethod, String products) {
+        this.orderId = orderId;
+        this.orderDate = orderDate;
+        this.totalAmount = totalAmount;
+        this.status = status;
+        this.paymentMethod = paymentMethod;
+        this.products = products;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public Date getOrderDate() {
+        return orderDate;
+    }
+
+    public double getTotalAmount() {
+        return totalAmount;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public String getProducts() {
+        return products;
     }
 }
