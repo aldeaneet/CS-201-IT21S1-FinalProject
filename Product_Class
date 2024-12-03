@@ -1,67 +1,133 @@
 package RetailStore;
 
+import java.sql.*;
+
 public class Product {
     private String productId;
     private String name;
     private String description;
     private double price;
-    private int stockLevel;
+    private int stock;
+    private String productImage;
 
-    public Product(String productId, String name, String description, double price, int stockLevel) {
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/solesociety";
+    private static final String DB_USER = "root"; 
+    private static final String DB_PASSWORD = "1234"; 
+
+    public Product(String productId, String name, String description, double price, int stock, String productImage) {
         this.productId = productId;
         this.name = name;
         this.description = description;
         this.price = price;
-        this.stockLevel = stockLevel;
+        this.stock = stock;
+        this.productImage = productImage;
+    }
+
+    public Product(String productId, String name, String description, double price, int stock) {
+        this(productId, name, description, price, stock, null);
     }
 
     public String getProductId() {
         return productId;
     }
 
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-
     public String getName() {
         return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public double getPrice() {
         return price;
+    }
+
+    public int getStock() {
+        return stock;
+    }
+
+    public String getProductImage() {
+        return productImage;
+    }
+
+    // Setters
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public void setPrice(double price) {
         this.price = price;
     }
 
-    public int getStockLevel() {
-        return stockLevel;
+    public void setStock(int stock) {
+        this.stock = stock;
     }
 
-    public void setStockLevel(int stockLevel) {
-        this.stockLevel = stockLevel;
+    public void setProductImage(String productImage) {
+        this.productImage = productImage;
     }
 
-    public int getStock() {
-        return stockLevel;
+    public void addProductToDatabase() {
+        String query = "INSERT INTO products (product_id, name, description, price, stock, productImage) VALUES (?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, productId);
+            stmt.setString(2, name);
+            stmt.setString(3, description);
+            stmt.setDouble(4, price);
+            stmt.setInt(5, stock);
+            stmt.setString(6, productImage);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void removeProductFromDatabase(String productId) {
+        String query = "DELETE FROM products WHERE product_id = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, productId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateProductInDatabase(String productId, Product updatedProduct) {
+        String query = "UPDATE products SET name = ?, description = ?, price = ?, stock = ?, productImage = ? WHERE product_id = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+
+            stmt.setString(1, updatedProduct.getName());
+            stmt.setString(2, updatedProduct.getDescription());
+            stmt.setDouble(3, updatedProduct.getPrice());
+            stmt.setInt(4, updatedProduct.getStock());
+            stmt.setString(5, updatedProduct.getProductImage());
+            stmt.setString(6, productId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public String toString() {
-        return "Product ID: " + productId + "\nName: " + name + "\nDescription: " + description +
-               "\nPrice: $" + price + "\nStock Level: " + stockLevel;
+        return "Product ID: " + productId +
+                "\nName: " + name +
+                "\nDescription: " + description +
+                "\nPrice: $" + String.format("%.2f", price) +
+                "\nStock: " + stock;
     }
 }
