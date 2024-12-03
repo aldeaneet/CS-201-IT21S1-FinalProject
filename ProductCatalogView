@@ -3,84 +3,96 @@ package RetailStore;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
-import java.util.Map;
 
-public class ProductCatalogView {
+public class ShoppingCartView {
     private JFrame frame;
+    private ShoppingCart cart;
     private ProductCatalog catalog;
-    private ShoppingCart shoppingCart;
     private OrderQueue orderQueue;
     private List<Order> orderHistory;
 
-    public ProductCatalogView(ProductCatalog catalog, ShoppingCart shoppingCart, OrderQueue orderQueue, List<Order> orderHistory) {
+    public ShoppingCartView(ShoppingCart cart, ProductCatalog catalog, OrderQueue orderQueue, List<Order> orderHistory) {
+        this.cart = cart;
         this.catalog = catalog;
-        this.shoppingCart = shoppingCart;
         this.orderQueue = orderQueue;
         this.orderHistory = orderHistory;
         initialize();
     }
 
     private void initialize() {
-        frame = new JFrame("Product Catalog");
-        frame.getContentPane().setBackground(new Color(236, 250, 199));
-        frame.setBounds(100, 100, 800, 500);
+        frame = new JFrame("Shopping Cart");
+        frame.getContentPane().setBackground(new Color(212, 212, 212));
+        frame.setBounds(100, 100, 600, 500);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.getContentPane().setLayout(null);
 
-        JLabel lblTitle = new JLabel("Product Catalog");
+        JLabel lblTitle = new JLabel("Your Shopping Cart");
+        lblTitle.setForeground(new Color(255, 255, 255));
         lblTitle.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 24));
         lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitle.setBounds(0, 0, 800, 50);
+        lblTitle.setBounds(0, 0, 600, 50);
         frame.getContentPane().add(lblTitle);
 
-        JPanel productPanel = new JPanel();
-        JScrollPane scrollPane = new JScrollPane(productPanel);
-        scrollPane.setBounds(10, 60, 768, 350);
+        JPanel cartItemsPanel = new JPanel();
+        cartItemsPanel.setLayout(new BoxLayout(cartItemsPanel, BoxLayout.Y_AXIS));
+        JScrollPane scrollPane = new JScrollPane(cartItemsPanel);
+        scrollPane.setBounds(10, 60, 570, 300);
         frame.getContentPane().add(scrollPane);
-        productPanel.setLayout(new GridLayout(0, 1));
 
-        JButton btnCart = new JButton("CART");
-        btnCart.setBackground(new Color(250, 224, 171));
-        btnCart.setBounds(320, 421, 149, 30);
-        frame.getContentPane().add(btnCart);
+        refreshCartItems(cartItemsPanel);
 
-        refreshProductPanel(productPanel);
+        double total = cart.calculateTotal();
+        JLabel lblTotal = new JLabel("Total: $" + String.format("%.2f", total));
+        lblTotal.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 18));
+        lblTotal.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTotal.setBounds(0, 370, 600, 30);
+        frame.getContentPane().add(lblTotal);
 
-        btnCart.addActionListener(e -> {
-            ShoppingCartView cartView = new ShoppingCartView(shoppingCart, catalog, orderQueue, orderHistory);
-            cartView.display();
+        JButton btnCheckout = new JButton("CHECKOUT");
+        btnCheckout.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 25));
+        btnCheckout.setBackground(new Color(165, 235, 252));
+        btnCheckout.setBounds(200, 411, 200, 39);
+        frame.getContentPane().add(btnCheckout);
+
+        JPanel panel = new JPanel();
+        panel.setBackground(new Color(0, 0, 0));
+        panel.setBounds(0, 0, 588, 50);
+        frame.getContentPane().add(panel);
+        panel.setLayout(null);
+
+        JButton btnNewButton = new JButton("BACK");
+        btnNewButton.setBackground(new Color(147, 193, 251));
+        btnNewButton.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnNewButton.setBounds(10, 11, 89, 23);
+        panel.add(btnNewButton);
+
+        btnNewButton.addActionListener(e -> frame.dispose());
+
+        btnCheckout.addActionListener(e -> {
+            CheckoutView checkoutView = new CheckoutView(cart, catalog, orderQueue, orderHistory);
+            checkoutView.display();
         });
     }
 
-    private void refreshProductPanel(JPanel productPanel) {
-        productPanel.removeAll();
-        Map<String, Product> products = catalog.getCatalog();
+    private void refreshCartItems(JPanel cartItemsPanel) {
+        cartItemsPanel.removeAll();
 
-        for (Product product : products.values()) {
-            JPanel productInfoPanel = new JPanel();
-            productInfoPanel.setLayout(new GridLayout(0, 1));
+        for (CartItem item : cart.getItems()) {
+            JPanel itemPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
-            JLabel lblName = new JLabel("Name: " + product.getName());
-            JLabel lblDescription = new JLabel("Description: " + product.getDescription());
-            JLabel lblPrice = new JLabel("Price: $" + product.getPrice());
-            JLabel lblStock = new JLabel("Stock: " + product.getStockLevel());
+            JLabel lblItemName = new JLabel(item.getProductName());
+            JLabel lblQuantity = new JLabel("Quantity: " + item.getQuantity());
+            JLabel lblPrice = new JLabel("$" + String.format("%.2f", item.getSubtotal()));
 
-            productInfoPanel.add(lblName);
-            productInfoPanel.add(lblDescription);
-            productInfoPanel.add(lblPrice);
-            productInfoPanel.add(lblStock);
+            itemPanel.add(lblItemName);
+            itemPanel.add(lblQuantity);
+            itemPanel.add(lblPrice);
 
-            JButton btnAddToCart = new JButton("Add to Cart");
-            btnAddToCart.addActionListener(e -> {
-                shoppingCart.addItem(new CartItem(product, 1));
-                JOptionPane.showMessageDialog(frame, product.getName() + " added to cart!");
-            });
-
-            productInfoPanel.add(btnAddToCart);
-            productPanel.add(productInfoPanel);
+            cartItemsPanel.add(itemPanel);
         }
-        productPanel.revalidate();
-        productPanel.repaint();
+
+        cartItemsPanel.revalidate();
+        cartItemsPanel.repaint();
     }
 
     public void display() {
