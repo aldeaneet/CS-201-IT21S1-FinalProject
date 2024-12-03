@@ -1,0 +1,140 @@
+package RetailStore;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.sql.*;
+
+public class SignIn extends JFrame {
+
+    private JPanel contentPane;
+    private JTextField textField;
+    private JPasswordField passwordField;
+
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/solesociety";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "1234";
+
+    public static void main(String[] args) {
+        EventQueue.invokeLater(() -> {
+            try {
+                SignIn frame = new SignIn();
+                frame.setVisible(true);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    public SignIn() {
+        setupUI();
+    }
+
+    private void setupUI() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setBounds(100, 100, 704, 409);
+        contentPane = new JPanel();
+        contentPane.setBackground(new Color(230, 230, 230));
+        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+        setContentPane(contentPane);
+        contentPane.setLayout(null);
+
+        textField = new JTextField();
+        textField.setBounds(433, 125, 179, 33);
+        contentPane.add(textField);
+
+        passwordField = new JPasswordField();
+        passwordField.setBounds(433, 187, 179, 33);
+        contentPane.add(passwordField);
+
+        JButton btnSignIn = new JButton("LOG IN");
+        btnSignIn.setBackground(new Color(146, 247, 252));
+        btnSignIn.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnSignIn.setBounds(478, 231, 89, 23);
+        btnSignIn.addActionListener(e -> handleSignIn());
+        contentPane.add(btnSignIn);
+
+        JButton btnSignUp = new JButton("SIGN UP");
+        btnSignUp.setBackground(new Color(146, 247, 252));
+        btnSignUp.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnSignUp.setBounds(478, 313, 89, 23);
+        btnSignUp.addActionListener(e -> {
+            new SignUp().setVisible(true);
+            dispose();
+        });
+        contentPane.add(btnSignUp);
+
+        JLabel lblUsername = new JLabel("USERNAME:");
+        lblUsername.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        lblUsername.setBounds(433, 108, 97, 14);
+        contentPane.add(lblUsername);
+
+        JLabel lblPassword = new JLabel("PASSWORD:");
+        lblPassword.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        lblPassword.setBounds(433, 169, 97, 14);
+        contentPane.add(lblPassword);
+
+        JLabel lblLogInTitle = new JLabel("LOG IN");
+        lblLogInTitle.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 18));
+        lblLogInTitle.setBounds(491, 54, 79, 14);
+        contentPane.add(lblLogInTitle);
+        
+        JLabel lblNewLabel = new JLabel("Don't have an account?\r\n");
+        lblNewLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        lblNewLabel.setVerticalAlignment(SwingConstants.TOP);
+        lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        lblNewLabel.setBounds(443, 285, 155, 23);
+        contentPane.add(lblNewLabel);
+        
+        JLabel lblCreateOneHere = new JLabel("Create one here:");
+        lblCreateOneHere.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        lblCreateOneHere.setVerticalAlignment(SwingConstants.TOP);
+        lblCreateOneHere.setHorizontalAlignment(SwingConstants.CENTER);
+        lblCreateOneHere.setBounds(443, 299, 155, 23);
+        contentPane.add(lblCreateOneHere);
+        
+        JLabel lblNewLabel_1 = new JLabel("");
+        lblNewLabel_1.setIcon(new ImageIcon(SignIn.class.getResource("/images/sole.png")));
+        lblNewLabel_1.setBounds(0, 0, 350, 374);
+        contentPane.add(lblNewLabel_1);
+    }
+
+    private void handleSignIn() {
+        String username = textField.getText().trim();
+        String password = new String(passwordField.getPassword()).trim();
+
+        if (username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter valid credentials!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String query = "SELECT * FROM usertable WHERE username = ? AND password = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, username);
+                stmt.setString(2, password);
+                ResultSet rs = stmt.executeQuery();
+
+                if (rs.next()) {
+                    int userId = rs.getInt("id");
+                    boolean isAdmin = rs.getBoolean("isAdmin");
+                    User user = new User(userId, username, isAdmin);
+
+                    UserSession.setCurrentUser(user);
+
+                    if (isAdmin) {
+                        new HomeAdmin(user, new ProductCatalog()).display();
+                    } else {
+                        new HomeCustomer(user, new ProductCatalog(), new ShoppingCart()).display();
+                    }
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Invalid username or password!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Database error: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+}
