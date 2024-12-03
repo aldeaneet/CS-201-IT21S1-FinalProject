@@ -2,97 +2,234 @@ package RetailStore;
 
 import javax.swing.*;
 import java.awt.*;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.io.File;
 
-public class ShoppingCartView {
+public class ProductCatalogView {
     private JFrame frame;
-    private ShoppingCart cart;
     private ProductCatalog catalog;
+    private ShoppingCart shoppingCart;
+    private User user;
     private OrderQueue orderQueue;
-    private List<Order> orderHistory;
 
-    public ShoppingCartView(ShoppingCart cart, ProductCatalog catalog, OrderQueue orderQueue, List<Order> orderHistory) {
-        this.cart = cart;
+    private JTextField searchField;
+    private JPanel productPanel;
+    private JComboBox<String> filterComboBox;
+
+    public ProductCatalogView(ProductCatalog catalog, ShoppingCart shoppingCart, User user) {
         this.catalog = catalog;
-        this.orderQueue = orderQueue;
-        this.orderHistory = orderHistory;
+        this.shoppingCart = shoppingCart;
+        this.user = user;
+
+        if (user.getOrderQueue() == null) {
+            user.setOrderQueue(new OrderQueue());
+        }
+        this.orderQueue = user.getOrderQueue();
+
         initialize();
     }
 
     private void initialize() {
-        frame = new JFrame("Shopping Cart");
-        frame.getContentPane().setBackground(new Color(212, 212, 212));
-        frame.setBounds(100, 100, 600, 500);
+        frame = new JFrame("Product Catalog");
+        frame.getContentPane().setBackground(new Color(213, 213, 213));
+        frame.setBounds(100, 100, 800, 535);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.getContentPane().setLayout(null);
 
-        JLabel lblTitle = new JLabel("Your Shopping Cart");
+        JLabel lblTitle = new JLabel("Product Catalog");
         lblTitle.setForeground(new Color(255, 255, 255));
         lblTitle.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 24));
         lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitle.setBounds(0, 0, 600, 50);
+        lblTitle.setBounds(254, -4, 279, 50);
         frame.getContentPane().add(lblTitle);
 
-        JPanel cartItemsPanel = new JPanel();
-        cartItemsPanel.setLayout(new BoxLayout(cartItemsPanel, BoxLayout.Y_AXIS));
-        JScrollPane scrollPane = new JScrollPane(cartItemsPanel);
-        scrollPane.setBounds(10, 60, 570, 300);
-        frame.getContentPane().add(scrollPane);
+        searchField = new JTextField();
+        searchField.setToolTipText("Search by ID, for example: 1");
+        searchField.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 12));
+        searchField.setBounds(571, 50, 97, 30);
+        frame.getContentPane().add(searchField);
 
-        refreshCartItems(cartItemsPanel);
+        JButton btnSearch = new JButton("Search");
+        btnSearch.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 12));
+        btnSearch.setBackground(new Color(165, 235, 252));
+        btnSearch.setBounds(678, 49, 100, 30);
+        frame.getContentPane().add(btnSearch);
 
-        double total = cart.calculateTotal();
-        JLabel lblTotal = new JLabel("Total: $" + String.format("%.2f", total));
-        lblTotal.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 18));
-        lblTotal.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTotal.setBounds(0, 370, 600, 30);
-        frame.getContentPane().add(lblTotal);
+        JButton btnBack = new JButton("Back");
+        btnBack.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnBack.setBackground(new Color(119, 191, 251));
+        btnBack.setBounds(10, 11, 80, 30);
+        frame.getContentPane().add(btnBack);
 
-        JButton btnCheckout = new JButton("CHECKOUT");
-        btnCheckout.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 25));
-        btnCheckout.setBackground(new Color(165, 235, 252));
-        btnCheckout.setBounds(200, 411, 200, 39);
-        frame.getContentPane().add(btnCheckout);
+        JButton btnCart = new JButton("View Cart");
+        btnCart.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnCart.setBackground(new Color(165, 235, 252));
+        btnCart.setBounds(315, 450, 149, 39);
+        frame.getContentPane().add(btnCart);
 
         JPanel panel = new JPanel();
         panel.setBackground(new Color(0, 0, 0));
-        panel.setBounds(0, 0, 588, 50);
+        panel.setBounds(0, -4, 788, 50);
         frame.getContentPane().add(panel);
-        panel.setLayout(null);
 
-        JButton btnNewButton = new JButton("BACK");
-        btnNewButton.setBackground(new Color(147, 193, 251));
-        btnNewButton.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
-        btnNewButton.setBounds(10, 11, 89, 23);
-        panel.add(btnNewButton);
+        productPanel = new JPanel();
+        JScrollPane scrollPane = new JScrollPane(productPanel);
+        scrollPane.setBounds(10, 90, 768, 350);
+        frame.getContentPane().add(scrollPane);
+        productPanel.setLayout(new GridLayout(0, 3, 5, 5));
 
-        btnNewButton.addActionListener(e -> frame.dispose());
-
-        btnCheckout.addActionListener(e -> {
-            CheckoutView checkoutView = new CheckoutView(cart, catalog, orderQueue, orderHistory);
-            checkoutView.display();
+        filterComboBox = new JComboBox<>(new String[]{
+            "ID Ascending", "ID Descending", "Price Ascending", "Price Descending", 
+            "Stock Ascending", "Stock Descending"
         });
+        filterComboBox.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        filterComboBox.setBounds(10, 54, 160, 22);
+        frame.getContentPane().add(filterComboBox);
+
+        JButton btnFilter = new JButton("Apply Filter");
+        btnFilter.setBackground(new Color(169, 220, 248));
+        btnFilter.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnFilter.setBounds(191, 54, 120, 23);
+        frame.getContentPane().add(btnFilter);
+
+        // Event Listeners
+        btnCart.addActionListener(e -> {
+            ShoppingCartView cartView = new ShoppingCartView(
+                shoppingCart,
+                catalog,
+                orderQueue,
+                user.getOrderHistory()
+            );
+            cartView.display();
+        });
+
+        btnBack.addActionListener(e -> {
+            frame.dispose();
+            new HomeCustomer(user, catalog, shoppingCart).display();
+        });
+
+        btnSearch.addActionListener(e -> {
+            String searchQuery = searchField.getText().trim();
+            if (!searchQuery.isEmpty()) {
+                filterProductsById(searchQuery);
+            }
+        });
+
+        btnFilter.addActionListener(e -> applyFilter());
+
+        refreshProductPanel(getAllProducts(), Comparator.comparing(Product::getProductId));
     }
 
-    private void refreshCartItems(JPanel cartItemsPanel) {
-        cartItemsPanel.removeAll();
-
-        for (CartItem item : cart.getItems()) {
-            JPanel itemPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
-            JLabel lblItemName = new JLabel(item.getProductName());
-            JLabel lblQuantity = new JLabel("Quantity: " + item.getQuantity());
-            JLabel lblPrice = new JLabel("$" + String.format("%.2f", item.getSubtotal()));
-
-            itemPanel.add(lblItemName);
-            itemPanel.add(lblQuantity);
-            itemPanel.add(lblPrice);
-
-            cartItemsPanel.add(itemPanel);
+    private void refreshProductPanel(List<Product> products, Comparator<Product> comparator) {
+        productPanel.removeAll();
+        products.sort(comparator);
+        for (Product product : products) {
+            addProductToPanel(product);
         }
+        productPanel.revalidate();
+        productPanel.repaint();
+    }
 
-        cartItemsPanel.revalidate();
-        cartItemsPanel.repaint();
+    private void applyFilter() {
+        List<Product> products = getAllProducts();
+        String selectedFilter = (String) filterComboBox.getSelectedItem();
+        if (selectedFilter != null) {
+            Comparator<Product> comparator = switch (selectedFilter) {
+                case "Price Ascending" -> Comparator.comparing(Product::getPrice);
+                case "Price Descending" -> Comparator.comparing(Product::getPrice).reversed();
+                case "Stock Ascending" -> Comparator.comparing(Product::getStock);
+                case "Stock Descending" -> Comparator.comparing(Product::getStock).reversed();
+                case "ID Descending" -> Comparator.comparing(Product::getProductId).reversed();
+                default -> Comparator.comparing(Product::getProductId);
+            };
+            refreshProductPanel(products, comparator);
+        }
+    }
+
+    private List<Product> getAllProducts() {
+        List<Product> products = new ArrayList<>();
+        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/solesociety", "root", "1234");
+             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM products");
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                products.add(new Product(
+                    rs.getString("product_id"),
+                    rs.getString("name"),
+                    rs.getString("description"),
+                    rs.getDouble("price"),
+                    rs.getInt("stock"),
+                    rs.getString("productImage")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return products;
+    }
+
+    private void filterProductsById(String searchQuery) {
+        List<Product> filteredProducts = new ArrayList<>();
+        for (Product product : getAllProducts()) {
+            if (product.getProductId().contains(searchQuery)) {
+                filteredProducts.add(product);
+            }
+        }
+        refreshProductPanel(filteredProducts, Comparator.comparing(Product::getProductId));
+    }
+
+    private void addProductToPanel(Product product) {
+        JPanel productInfoPanel = new JPanel();
+        productInfoPanel.setLayout(new BoxLayout(productInfoPanel, BoxLayout.Y_AXIS));
+
+        JLabel lblId = new JLabel("ID: " + product.getProductId());
+        lblId.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 14));
+        lblId.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblName = new JLabel(product.getName());
+        lblName.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 12));
+        lblName.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblDescription = new JLabel("<html><div style='text-align:center; width:150px;'>" + product.getDescription() + "</div></html>");
+        lblDescription.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblPrice = new JLabel("Price: $" + product.getPrice());
+        lblPrice.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel lblStock = new JLabel("Stock: " + product.getStock());
+        lblStock.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        String imagePath = System.getProperty("user.dir") + "/photos/" + product.getProductImage();
+        File imgFile = new File(imagePath);
+        JLabel lblImage;
+        if (imgFile.exists()) {
+            ImageIcon productIcon = new ImageIcon(imagePath);
+            lblImage = new JLabel();
+            Image img = productIcon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+            lblImage.setIcon(new ImageIcon(img));
+        } else {
+            lblImage = new JLabel("Image not available");
+        }
+        lblImage.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        productInfoPanel.add(lblId);
+        productInfoPanel.add(lblImage);
+        productInfoPanel.add(lblName);
+        productInfoPanel.add(lblDescription);
+        productInfoPanel.add(lblPrice);
+        productInfoPanel.add(lblStock);
+
+        JButton btnAddToCart = new JButton("Add to Cart");
+        btnAddToCart.addActionListener(e -> {
+            shoppingCart.addItem(new CartItem(product, 1));
+            JOptionPane.showMessageDialog(frame, product.getName() + " added to cart!");
+        });
+        productInfoPanel.add(btnAddToCart);
+
+        productPanel.add(productInfoPanel);
     }
 
     public void display() {
