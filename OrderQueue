@@ -12,8 +12,12 @@ public class OrderQueue {
     }
 
     public void enqueueOrder(Order order) {
-        orderQueue.add(order);
-        System.out.println("Order " + order.getOrderId() + " added to the queue.");
+        if (order != null) {
+            orderQueue.add(order);
+            System.out.println("Order " + order.getOrderId() + " added to the queue.");
+        } else {
+            System.out.println("Cannot add null order to the queue.");
+        }
     }
 
     public Order dequeueOrder() {
