@@ -1,0 +1,172 @@
+package RetailStore;
+
+import java.awt.EventQueue;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.awt.event.ActionEvent;
+import java.awt.Font;
+import javax.swing.ImageIcon;
+import java.awt.Color;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class SignUp extends JFrame {
+
+    private JPanel contentPane;
+    private JTextField textFieldUsername;
+    private JTextField textFieldPassword;
+    private JTextField textFieldEmail;
+
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/solesociety"; 
+    private static final String DB_USER = "root"; 
+    private static final String DB_PASSWORD = "1234";
+
+    public static void main(String[] args) {
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    SignUp frame = new SignUp();
+                    frame.setVisible(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public SignUp() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setBounds(100, 100, 715, 412);
+        contentPane = new JPanel();
+        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+        setContentPane(contentPane);
+        contentPane.setLayout(null);
+
+        JLabel lblSignUp = new JLabel("SIGN UP");
+        lblSignUp.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 18));
+        lblSignUp.setBounds(459, 44, 100, 25);
+        contentPane.add(lblSignUp);
+
+        JLabel lblUsername = new JLabel("Username:");
+        lblUsername.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        lblUsername.setBounds(379, 102, 100, 25);
+        contentPane.add(lblUsername);
+
+        textFieldUsername = new JTextField();
+        textFieldUsername.setBounds(479, 102, 180, 25);
+        contentPane.add(textFieldUsername);
+        textFieldUsername.setColumns(10);
+
+        JLabel lblPassword = new JLabel("Password:");
+        lblPassword.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        lblPassword.setBounds(379, 142, 100, 25);
+        contentPane.add(lblPassword);
+
+        textFieldPassword = new JTextField();
+        textFieldPassword.setBounds(479, 142, 180, 25);
+        contentPane.add(textFieldPassword);
+        textFieldPassword.setColumns(10);
+
+        JLabel lblEmail = new JLabel("Email:");
+        lblEmail.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        lblEmail.setBounds(379, 182, 100, 25);
+        contentPane.add(lblEmail);
+
+        textFieldEmail = new JTextField();
+        textFieldEmail.setBounds(479, 182, 180, 25);
+        contentPane.add(textFieldEmail);
+        textFieldEmail.setColumns(10);
+
+        JButton btnSignUp = new JButton("SIGN UP");
+        btnSignUp.setBackground(new Color(146, 247, 252));
+        btnSignUp.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnSignUp.setBounds(479, 218, 180, 30);
+        contentPane.add(btnSignUp);
+
+        JLabel lblNewLabel = new JLabel("");
+        lblNewLabel.setIcon(new ImageIcon(SignUp.class.getResource("/images/sole.png"))); // Update with your image path
+        lblNewLabel.setBounds(0, 0, 349, 377);
+        contentPane.add(lblNewLabel);
+
+        JLabel lblNewLabel_1 = new JLabel("I have an account");
+        lblNewLabel_1.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        lblNewLabel_1.setBounds(379, 296, 145, 14);
+        contentPane.add(lblNewLabel_1);
+
+        JButton btnNewButton = new JButton("LOG IN");
+        btnNewButton.setBackground(new Color(146, 247, 252));
+        btnNewButton.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnNewButton.setBounds(482, 292, 89, 23);
+        contentPane.add(btnNewButton);
+
+        btnSignUp.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String username = textFieldUsername.getText();
+                String password = textFieldPassword.getText();
+                String email = textFieldEmail.getText();
+
+                if (!username.isEmpty() && !password.isEmpty() && !email.isEmpty()) {
+                    if (isValidEmail(email)) {
+                        if (registerUser(username, password, email)) {
+                            JOptionPane.showMessageDialog(contentPane, "Registration Successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                            SignIn signInWindow = new SignIn();
+                            signInWindow.setVisible(true);
+                            dispose();
+                        } else {
+                            JOptionPane.showMessageDialog(contentPane, "Registration Failed! Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(contentPane, "Invalid email format! Please use a valid email.", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(contentPane, "Please fill all fields!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        btnNewButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                SignIn signInWindow = new SignIn();
+                signInWindow.setVisible(true);
+                dispose();
+            }
+        });
+    }
+
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@gmail\\.com$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        Matcher matcher = pattern.matcher(email);
+        return matcher.matches();
+    }
+
+    private boolean registerUser(String username, String password, String email) {
+        boolean isRegistered = false;
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String query = "INSERT INTO usertable (username, password, email) VALUES (?, ?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setString(1, username);
+                stmt.setString(2, password);
+                stmt.setString(3, email);
+
+                int rowsAffected = stmt.executeUpdate();
+                if (rowsAffected > 0) {
+                    isRegistered = true;
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(contentPane, "Database connection error!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return isRegistered;
+    }
+}
