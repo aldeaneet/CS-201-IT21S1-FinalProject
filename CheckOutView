@@ -2,8 +2,9 @@ package RetailStore;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class CheckoutView {
@@ -13,7 +14,15 @@ public class CheckoutView {
     private OrderQueue orderQueue;
     private List<Order> orderHistory;
 
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/solesociety";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "1234";
+
     public CheckoutView(ShoppingCart cart, ProductCatalog productCatalog, OrderQueue orderQueue, List<Order> orderHistory) {
+        if (orderQueue == null) {
+            throw new IllegalArgumentException("OrderQueue cannot be null");
+        }
+
         this.cart = cart;
         this.productCatalog = productCatalog;
         this.orderQueue = orderQueue;
@@ -23,8 +32,8 @@ public class CheckoutView {
 
     private void initialize() {
         frame = new JFrame("Checkout");
-        frame.getContentPane().setBackground(new Color(226, 248, 227));
-        frame.setBounds(100, 100, 600, 400);
+        frame.getContentPane().setBackground(new Color(226, 226, 226));
+        frame.setBounds(100, 100, 600, 500);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.getContentPane().setLayout(null);
 
@@ -37,62 +46,175 @@ public class CheckoutView {
         JLabel totalLabel = new JLabel("Total: $" + cart.calculateTotal());
         totalLabel.setHorizontalAlignment(SwingConstants.CENTER);
         totalLabel.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 18));
-        totalLabel.setBounds(10, 100, 570, 30);
+        totalLabel.setBounds(10, 50, 570, 30);
         frame.getContentPane().add(totalLabel);
 
+        JLabel lblPaymentMethod = new JLabel("Payment Method:");
+        lblPaymentMethod.setFont(new Font("Arial", Font.PLAIN, 14));
+        lblPaymentMethod.setBounds(20, 100, 150, 30);
+        frame.getContentPane().add(lblPaymentMethod);
+
+        JComboBox<String> paymentMethodComboBox = new JComboBox<>(new String[]{"Select", "GCash", "Credit/Debit Card"});
+        paymentMethodComboBox.setBounds(150, 100, 200, 30);
+        frame.getContentPane().add(paymentMethodComboBox);
+
+        JLabel lblName = new JLabel("Name:");
+        lblName.setFont(new Font("Arial", Font.PLAIN, 14));
+        lblName.setBounds(20, 150, 150, 30);
+        lblName.setVisible(false);
+        frame.getContentPane().add(lblName);
+
+        JTextField txtName = new JTextField();
+        txtName.setBounds(150, 150, 200, 30);
+        txtName.setVisible(false);
+        frame.getContentPane().add(txtName);
+
+        JLabel lblPhoneOrCard = new JLabel();
+        lblPhoneOrCard.setFont(new Font("Arial", Font.PLAIN, 14));
+        lblPhoneOrCard.setBounds(20, 200, 150, 30);
+        lblPhoneOrCard.setVisible(false);
+        frame.getContentPane().add(lblPhoneOrCard);
+
+        JTextField txtPhoneOrCard = new JTextField();
+        txtPhoneOrCard.setBounds(150, 200, 200, 30);
+        txtPhoneOrCard.setVisible(false);
+        frame.getContentPane().add(txtPhoneOrCard);
+
+        paymentMethodComboBox.addActionListener(e -> {
+            String selectedMethod = (String) paymentMethodComboBox.getSelectedItem();
+            if ("GCash".equals(selectedMethod)) {
+                lblName.setText("Name:");
+                lblPhoneOrCard.setText("Phone Number:");
+                lblName.setVisible(true);
+                txtName.setVisible(true);
+                lblPhoneOrCard.setVisible(true);
+                txtPhoneOrCard.setVisible(true);
+            } else if ("Credit/Debit Card".equals(selectedMethod)) {
+                lblName.setText("Cardholder Name:");
+                lblPhoneOrCard.setText("Card Number:");
+                lblName.setVisible(true);
+                txtName.setVisible(true);
+                lblPhoneOrCard.setVisible(true);
+                txtPhoneOrCard.setVisible(true);
+            } else {
+                lblName.setVisible(false);
+                txtName.setVisible(false);
+                lblPhoneOrCard.setVisible(false);
+                txtPhoneOrCard.setVisible(false);
+            }
+        });
+
         JButton btnPlaceOrder = new JButton("Place Order");
-        btnPlaceOrder.setBackground(new Color(251, 218, 164));
+        btnPlaceOrder.setBackground(new Color(169, 220, 248));
         btnPlaceOrder.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
-        btnPlaceOrder.setBounds(95, 264, 150, 40);
+        btnPlaceOrder.setBounds(95, 300, 150, 40);
         frame.getContentPane().add(btnPlaceOrder);
 
         JButton btnBack = new JButton("Back");
-        btnBack.setBackground(new Color(251, 218, 164));
+        btnBack.setBackground(new Color(169, 220, 248));
         btnBack.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
-        btnBack.setBounds(380, 264, 150, 40);
+        btnBack.setBounds(380, 300, 150, 40);
         frame.getContentPane().add(btnBack);
 
-        btnPlaceOrder.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (cart.getItems().isEmpty()) {
-                    JOptionPane.showMessageDialog(frame, "Your cart is empty. Add items to checkout.");
-                    return;
+        btnPlaceOrder.addActionListener(e -> {
+            if (cart.getItems().isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Your cart is empty. Add items to checkout.");
+                return;
+            }
+
+            String selectedMethod = (String) paymentMethodComboBox.getSelectedItem();
+            if ("Select".equals(selectedMethod) || selectedMethod == null) {
+                JOptionPane.showMessageDialog(frame, "Please select a payment method.");
+                return;
+            }
+
+            String name = txtName.getText();
+            String phoneOrCard = txtPhoneOrCard.getText();
+            if (name.isEmpty() || phoneOrCard.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Please fill in the required payment details.");
+                return;
+            }
+
+            boolean stockAvailable = true;
+            for (CartItem item : cart.getItems()) {
+                Product product = productCatalog.getProduct(item.getProductId());
+                if (product.getStock() < item.getQuantity()) {
+                    JOptionPane.showMessageDialog(frame, "Insufficient stock for: " + product.getName());
+                    stockAvailable = false;
+                    break;
                 }
+            }
 
-                boolean stockAvailable = true;
-                for (CartItem item : cart.getItems()) {
-                    Product product = productCatalog.getProduct(item.getProductId());
-                    if (product.getStockLevel() < item.getQuantity()) {
-                        JOptionPane.showMessageDialog(frame,
-                                "Insufficient stock for: " + product.getName());
-                        stockAvailable = false;
-                        break;
-                    }
-                }
+            if (stockAvailable) {
+                String orderId = "ORD" + System.currentTimeMillis();
+                String orderDate = getCurrentDateTime();
+                int customerId = UserSession.getCurrentUser().getId();
+                double totalAmount = cart.calculateTotal();
+                String status = "Completed";
+                String gcashName = "GCash".equals(selectedMethod) ? name : null;
+                String gcashPhoneNumber = "GCash".equals(selectedMethod) ? phoneOrCard : null;
+                String cardholderName = "Credit/Debit Card".equals(selectedMethod) ? name : null;
+                String cardNumber = "Credit/Debit Card".equals(selectedMethod) ? phoneOrCard : null;
 
-                if (stockAvailable) {
-                    for (CartItem item : cart.getItems()) {
-                        Product product = productCatalog.getProduct(item.getProductId());
-                        product.setStockLevel(product.getStockLevel() - item.getQuantity());
-                    }
+                insertOrderIntoDatabase(orderId, customerId, orderDate, totalAmount, status, selectedMethod, gcashName, gcashPhoneNumber, cardholderName, cardNumber);
+                updateProductStockInDatabase();
 
-                    Order order = new Order("ORD" + System.currentTimeMillis(), "Today", "Customer");
-                    order.getItems().addAll(cart.getItems());
-                    order.calculateTotal();
-                    orderQueue.enqueueOrder(order);
-                    orderHistory.add(order);
-                    cart.getItems().clear();
+                cart.getItems().clear();
 
-                    JOptionPane.showMessageDialog(frame, "Order placed successfully!");
-                    frame.dispose();
-                }
+                JOptionPane.showMessageDialog(frame, "Order placed successfully!");
+                frame.dispose();
             }
         });
 
         btnBack.addActionListener(e -> frame.dispose());
     }
 
+    private void insertOrderIntoDatabase(String orderId, int customerId, String orderDate, double totalAmount, String status, String paymentMethod, 
+                                         String gcashName, String gcashPhoneNumber, String cardholderName, String cardNumber) {
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String orderQuery = "INSERT INTO orderhistory (orderId, customerId, orderDate, totalAmount, status, paymentMethod, gcashName, gcashPhoneNumber, cardholderName, cardNumber) " +
+                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            try (PreparedStatement orderStmt = connection.prepareStatement(orderQuery)) {
+                orderStmt.setString(1, orderId);
+                orderStmt.setInt(2, customerId);
+                orderStmt.setString(3, orderDate);
+                orderStmt.setDouble(4, totalAmount);
+                orderStmt.setString(5, status);
+                orderStmt.setString(6, paymentMethod);
+                orderStmt.setString(7, gcashName);
+                orderStmt.setString(8, gcashPhoneNumber);
+                orderStmt.setString(9, cardholderName);
+                orderStmt.setString(10, cardNumber);
+                orderStmt.executeUpdate();
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(frame, "Error saving order to the database: " + e.getMessage(),
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     public void display() {
         frame.setVisible(true);
+    }
+
+    private String getCurrentDateTime() {
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
+
+    private void updateProductStockInDatabase() {
+        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            for (CartItem item : cart.getItems()) {
+                Product product = productCatalog.getProduct(item.getProductId());
+                String updateQuery = "UPDATE products SET stock = stock - ? WHERE product_id = ?";
+                try (PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
+                    updateStmt.setInt(1, item.getQuantity());
+                    updateStmt.setString(2, product.getProductId());
+                    updateStmt.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(frame, "Error updating product stock in the database: " + e.getMessage(),
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }
