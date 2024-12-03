@@ -1,0 +1,107 @@
+package RetailStore;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.util.Collection;
+
+public class ViewProducts {
+    private JFrame frame;
+    private JTextField productIdField;
+    private ProductCatalog productCatalog;
+    private JTable table;
+    private DefaultTableModel tableModel;
+
+    public ViewProducts(ProductCatalog catalog) {
+        this.productCatalog = catalog;
+        initialize();
+    }
+
+    private void initialize() {
+        frame = new JFrame("View Products");
+        frame.setBounds(100, 100, 600, 400);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.getContentPane().setLayout(null);
+
+        JLabel lblProductId = new JLabel("Product ID:");
+        lblProductId.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 15));
+        lblProductId.setBounds(20, 20, 100, 25);
+        frame.getContentPane().add(lblProductId);
+
+        productIdField = new JTextField();
+        productIdField.setBounds(130, 20, 150, 25);
+        frame.getContentPane().add(productIdField);
+
+        JButton searchButton = new JButton("Search Product");
+        searchButton.setBackground(new Color(169, 220, 248));
+        searchButton.setBounds(300, 20, 150, 25);
+        frame.getContentPane().add(searchButton);
+
+        JButton btnDisplayAll = new JButton("Display All");
+        btnDisplayAll.setBackground(new Color(169, 220, 248));
+        btnDisplayAll.setBounds(200, 320, 200, 25);
+        frame.getContentPane().add(btnDisplayAll);
+
+        tableModel = new DefaultTableModel(
+                new Object[]{"Product ID", "Name", "Description", "Price", "Stock"},
+                0
+        );
+        table = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBounds(20, 60, 550, 240);
+        frame.getContentPane().add(scrollPane);
+
+        JButton btnRefresh = new JButton("Refresh");
+        btnRefresh.setBackground(new Color(186, 232, 252));
+        btnRefresh.setBounds(20, 320, 89, 25);
+        frame.getContentPane().add(btnRefresh);
+
+        JButton btnBack = new JButton("Back");
+        btnBack.setBackground(new Color(186, 232, 252));
+        btnBack.setBounds(481, 11, 89, 23);
+        frame.getContentPane().add(btnBack);
+
+        searchButton.addActionListener(e -> {
+            String productId = productIdField.getText();
+            Product product = productCatalog.getProduct(productId);
+            if (product != null) {
+                tableModel.setRowCount(0);
+                tableModel.addRow(new Object[]{
+                        product.getProductId(),
+                        product.getName(),
+                        product.getDescription(),
+                        product.getPrice(),
+                        product.getStock()
+                });
+            } else {
+                JOptionPane.showMessageDialog(frame, "Product not found.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        btnDisplayAll.addActionListener(e -> displayAllProducts());
+
+        btnRefresh.addActionListener(e -> displayAllProducts());
+
+        btnBack.addActionListener(e -> frame.dispose());
+
+        frame.setVisible(true);
+    }
+
+    private void displayAllProducts() {
+        tableModel.setRowCount(0);
+        Collection<Product> products = productCatalog.getCatalog().values();
+        for (Product product : products) {
+            tableModel.addRow(new Object[]{
+                    product.getProductId(),
+                    product.getName(),
+                    product.getDescription(),
+                    product.getPrice(),
+                    product.getStock()
+            });
+        }
+
+        if (products.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "No products available.", "Info", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+}
