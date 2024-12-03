@@ -1,0 +1,76 @@
+package RetailStore;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class HomeCustomer extends JFrame {
+    private ProductCatalog productCatalog;
+    private ShoppingCart shoppingCart;
+    private User user;
+
+    public HomeCustomer(User user, ProductCatalog productCatalog, ShoppingCart shoppingCart) {
+        this.user = user;
+        this.productCatalog = productCatalog;
+        this.shoppingCart = shoppingCart;
+        initialize();
+    }
+
+    private void initialize() {
+
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setBounds(100, 100, 704, 409);
+        JPanel contentPane = new JPanel();
+        contentPane.setLayout(null);
+        setContentPane(contentPane);
+        JLabel lblUsername = new JLabel("Welcome! " + user.getUsername());
+        lblUsername.setBackground(new Color(0, 0, 0));
+        lblUsername.setForeground(new Color(255, 255, 255));
+        lblUsername.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 14));
+        lblUsername.setOpaque(true);
+        lblUsername.setBounds(10, 10, 235, 30);
+        contentPane.add(lblUsername);
+
+
+        JButton btnViewProducts = new JButton("View Products");
+        btnViewProducts.setBackground(new Color(165, 235, 252));
+        btnViewProducts.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnViewProducts.setBounds(482, 55, 200, 50);
+        contentPane.add(btnViewProducts);
+
+        JButton btnViewOrderHistory = new JButton("Order History");
+        btnViewOrderHistory.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnViewOrderHistory.setBackground(new Color(165, 235, 252));
+        btnViewOrderHistory.setBounds(482, 116, 200, 50);
+        contentPane.add(btnViewOrderHistory);
+
+        btnViewProducts.addActionListener(e -> new ProductCatalogView(productCatalog, shoppingCart, user).display());
+        btnViewOrderHistory.addActionListener(e -> new OrderHistoryView(user.getId(), user.getUsername()).display());
+        
+        Panel panel = new Panel();
+        panel.setBackground(new Color(0, 0, 0));
+        panel.setBounds(0, 0, 700, 50);
+        contentPane.add(panel);
+        panel.setLayout(null);
+        
+                JButton btnLogout = new JButton("Logout");
+                btnLogout.setBackground(new Color(123, 176, 242));
+                btnLogout.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+                btnLogout.setBounds(607, 11, 71, 30);
+                panel.add(btnLogout);
+                
+                JLabel lblNewLabel = new JLabel("\r\n");
+                lblNewLabel.setIcon(new ImageIcon(HomeCustomer.class.getResource("/images/AdCustomer.png")));
+                lblNewLabel.setBounds(10, 55, 460, 238);
+                contentPane.add(lblNewLabel);
+                btnLogout.addActionListener(e -> {
+                    dispose();
+                    new SignIn().setVisible(true);
+                });
+
+        setVisible(true);
+    }
+
+    public void display() {
+        setVisible(true);
+    }
+}
