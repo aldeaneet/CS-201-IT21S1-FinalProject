@@ -1,32 +1,54 @@
 package RetailStore;
 
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ProductCatalog {
     private HashMap<String, Product> catalog = new HashMap<>();
 
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/solesociety";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "1234";
+
+    public ProductCatalog() {
+        loadCatalogFromDatabase();
+    }
+
+    private void loadCatalogFromDatabase() {
+        String query = "SELECT * FROM products";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            while (rs.next()) {
+                String productId = rs.getString("product_id");
+                String name = rs.getString("name");
+                String description = rs.getString("description");
+                double price = rs.getDouble("price");
+                int stock = rs.getInt("stock");
+
+                Product product = new Product(productId, name, description, price, stock);
+                catalog.put(productId, product);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void addProduct(Product product) {
         catalog.put(product.getProductId(), product);
-        System.out.println("Product added: " + product.getName());
+        product.addProductToDatabase();
     }
 
     public void removeProduct(String productId) {
-        if (catalog.containsKey(productId)) {
-            catalog.remove(productId);
-            System.out.println("Product removed: " + productId);
-        } else {
-            System.out.println("Product not found: " + productId);
-        }
+        catalog.remove(productId);
+        Product.removeProductFromDatabase(productId);
     }
 
     public void updateProduct(String productId, Product updatedProduct) {
-        if (catalog.containsKey(productId)) {
-            catalog.put(productId, updatedProduct);
-            System.out.println("Product updated: " + updatedProduct.getName());
-        } else {
-            System.out.println("Product not found: " + productId);
-        }
+        catalog.put(productId, updatedProduct);
+        Product.updateProductInDatabase(productId, updatedProduct);
     }
 
     public Product getProduct(String productId) {
@@ -35,16 +57,5 @@ public class ProductCatalog {
 
     public Map<String, Product> getCatalog() {
         return catalog;
-    }
-
-    public void displayProducts() {
-        if (catalog.isEmpty()) {
-            System.out.println("No products available in the catalog.");
-        } else {
-            for (Product product : catalog.values()) {
-                System.out.println(product);
-                System.out.println("------------");
-            }
-        }
     }
 }
