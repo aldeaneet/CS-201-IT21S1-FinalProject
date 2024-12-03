@@ -1,0 +1,48 @@
+package RetailStore;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class User {
+    private int id;
+    private String username;
+    private boolean isAdmin;
+    private List<Order> orderHistory;
+    private OrderQueue orderQueue;
+
+    public User(int id, String username, boolean isAdmin) {
+        this.id = id;
+        this.username = username;
+        this.isAdmin = isAdmin;
+        this.orderHistory = new ArrayList<>();
+        this.orderQueue = new OrderQueue();
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
+    public List<Order> getOrderHistory() {
+        return orderHistory;
+    }
+
+    public void setOrderHistory(List<Order> orderHistory) {
+        this.orderHistory = orderHistory;
+    }
+
+    public OrderQueue getOrderQueue() {
+        return orderQueue;
+    }
+
+    public void setOrderQueue(OrderQueue orderQueue) {
+        this.orderQueue = orderQueue;
+    }
+}
