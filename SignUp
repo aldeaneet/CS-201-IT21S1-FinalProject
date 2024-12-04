@@ -93,7 +93,7 @@ public class SignUp extends JFrame {
         contentPane.add(btnSignUp);
 
         JLabel lblNewLabel = new JLabel("");
-        lblNewLabel.setIcon(new ImageIcon(SignUp.class.getResource("/images/sole.png"))); // Update with your image path
+        lblNewLabel.setIcon(new ImageIcon(SignUp.class.getResource("/images/sole.png")));
         lblNewLabel.setBounds(0, 0, 349, 377);
         contentPane.add(lblNewLabel);
 
