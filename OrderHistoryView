@@ -124,7 +124,7 @@ public class OrderHistoryView {
                         rs.getDate("orderDate"),
                         rs.getDouble("totalAmount"),
                         rs.getString("status"),
-                        rs.getString("paymentMethod"),  // Fetch payment method
+                        rs.getString("paymentMethod"),
                         rs.getString("products")
                 ));
             }
