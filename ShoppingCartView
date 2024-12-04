@@ -6,14 +6,15 @@ import java.util.List;
 
 public class ShoppingCartView {
     private JFrame frame;
-    private ShoppingCart shoppingCart;
-    private ProductCatalog productCatalog;
+    private ShoppingCart cart;
+    private ProductCatalog catalog;
     private OrderQueue orderQueue;
     private List<Order> orderHistory;
+    private JLabel lblTotal;
 
-    public ShoppingCartView(ShoppingCart shoppingCart, ProductCatalog productCatalog, OrderQueue orderQueue, List<Order> orderHistory) {
-        this.shoppingCart = shoppingCart;
-        this.productCatalog = productCatalog;
+    public ShoppingCartView(ShoppingCart cart, ProductCatalog catalog, OrderQueue orderQueue, List<Order> orderHistory) {
+        this.cart = cart;
+        this.catalog = catalog;
         this.orderQueue = orderQueue;
         this.orderHistory = orderHistory;
         initialize();
@@ -21,69 +22,113 @@ public class ShoppingCartView {
 
     private void initialize() {
         frame = new JFrame("Shopping Cart");
-        frame.getContentPane().setBackground(new Color(170, 221, 171));
-        frame.setBounds(100, 100, 725, 425);
+        frame.getContentPane().setBackground(new Color(212, 212, 212));
+        frame.setBounds(100, 100, 600, 500);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.getContentPane().setLayout(null);
 
-        JPanel cartPanel = new JPanel();
-        cartPanel.setBackground(new Color(236, 250, 199));
-        
-        cartPanel.setLayout(new BoxLayout(cartPanel, BoxLayout.Y_AXIS));
-        
-        JScrollPane scrollPane = new JScrollPane(cartPanel);
-        scrollPane.setBounds(0, 32, 713, 335);
+        JLabel lblTitle = new JLabel("Your Shopping Cart");
+        lblTitle.setForeground(new Color(255, 255, 255));
+        lblTitle.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 24));
+        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTitle.setBounds(0, 0, 600, 50);
+        frame.getContentPane().add(lblTitle);
+
+        JPanel cartItemsPanel = new JPanel();
+        cartItemsPanel.setLayout(new GridBagLayout());
+        JScrollPane scrollPane = new JScrollPane(cartItemsPanel);
+        scrollPane.setBounds(10, 60, 570, 300);
         frame.getContentPane().add(scrollPane);
 
-        List<CartItem> items = shoppingCart.getItems();
-        if (items.isEmpty()) {
-            JLabel lblEmptyCart = new JLabel("Your cart is empty.");
-            lblEmptyCart.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 16));
-            cartPanel.add(lblEmptyCart);
-        } else {
-            for (CartItem item : items) {
-                JPanel itemPanel = new JPanel();
-                itemPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        refreshCartItems(cartItemsPanel);
 
-                JLabel lblName = new JLabel("Product: " + item.getProductName());
-                lblName.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 14));
+        lblTotal = new JLabel("Total: $" + String.format("%.2f", cart.calculateTotal()));
+        lblTotal.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 18));
+        lblTotal.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTotal.setBounds(0, 370, 600, 30);
+        frame.getContentPane().add(lblTotal);
 
-                JLabel lblSubtotal = new JLabel("Subtotal: $" + item.getSubtotal());
-                lblSubtotal.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 14));
+        JButton btnCheckout = new JButton("CHECKOUT");
+        btnCheckout.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 25));
+        btnCheckout.setBackground(new Color(165, 235, 252));
+        btnCheckout.setBounds(200, 411, 200, 39);
+        frame.getContentPane().add(btnCheckout);
 
-                JLabel lblQuantity = new JLabel("Quantity:");
-                JSpinner spinner = new JSpinner(new SpinnerNumberModel(item.getQuantity(), 1, 99, 1));
-                spinner.addChangeListener(e -> {
-                    int newQuantity = (int) spinner.getValue();
-                    item.setQuantity(newQuantity);
-                    lblSubtotal.setText("Subtotal: $" + item.getSubtotal());
-                });
+        JPanel panel = new JPanel();
+        panel.setBackground(new Color(0, 0, 0));
+        panel.setBounds(0, 0, 588, 50);
+        frame.getContentPane().add(panel);
+        panel.setLayout(null);
 
-                itemPanel.add(lblName);
-                itemPanel.add(lblQuantity);
-                itemPanel.add(spinner);
-                itemPanel.add(lblSubtotal);
+        JButton btnNewButton = new JButton("BACK");
+        btnNewButton.setBackground(new Color(147, 193, 251));
+        btnNewButton.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
+        btnNewButton.setBounds(10, 11, 89, 23);
+        panel.add(btnNewButton);
 
-                cartPanel.add(itemPanel);
-            }
-        }
+        btnNewButton.addActionListener(e -> frame.dispose());
 
-        JButton btnCheckout = new JButton("Proceed to Checkout");
-        btnCheckout.setBackground(new Color(248, 203, 143));
-        btnCheckout.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
-        btnCheckout.setBounds(0, 367, 713, 23);
         btnCheckout.addActionListener(e -> {
-            CheckoutView checkoutView = new CheckoutView(shoppingCart, productCatalog, orderQueue, orderHistory);
+            CheckoutView checkoutView = new CheckoutView(cart, catalog, orderQueue, orderHistory);
             checkoutView.display();
             frame.dispose();
         });
-        frame.getContentPane().add(btnCheckout);
+    }
 
-        JLabel lblTitle = new JLabel("Shopping Cart");
-        lblTitle.setBounds(0, 0, 713, 32);
-        lblTitle.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 24));
-        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        frame.getContentPane().add(lblTitle);
+    private void refreshCartItems(JPanel cartItemsPanel) {
+        cartItemsPanel.removeAll();
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = GridBagConstraints.RELATIVE;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+
+        for (CartItem item : cart.getItems()) {
+            JPanel itemPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+            itemPanel.setPreferredSize(new Dimension(500, 40));
+
+            JLabel lblItemName = new JLabel(item.getProductName());
+            
+            SpinnerNumberModel spinnerModel = new SpinnerNumberModel(
+                item.getQuantity(), 1, 100, 1
+            );
+            JSpinner quantitySpinner = new JSpinner(spinnerModel);
+            quantitySpinner.setPreferredSize(new Dimension(50, 25));
+            quantitySpinner.addChangeListener(e -> {
+                int newQuantity = (int) quantitySpinner.getValue();
+                cart.updateItemQuantity(item.getProductId(), newQuantity);
+                updateTotal();
+                frame.repaint();
+            });
+
+            JButton deleteButton = new JButton("Delete");
+            deleteButton.setBackground(new Color(165, 235, 252));
+            deleteButton.setPreferredSize(new Dimension(70, 25));
+            deleteButton.addActionListener(e -> {
+                cart.removeItem(item.getProductId());
+                refreshCartItems(cartItemsPanel);
+                updateTotal();
+                frame.repaint();
+            });
+
+            JLabel lblPrice = new JLabel("$" + String.format("%.2f", item.getSubtotal()));
+
+            itemPanel.add(lblItemName);
+            itemPanel.add(quantitySpinner);
+            itemPanel.add(deleteButton);
+            itemPanel.add(lblPrice);
+
+            cartItemsPanel.add(itemPanel, gbc);
+        }
+
+        cartItemsPanel.revalidate();
+        cartItemsPanel.repaint();
+    }
+
+    private void updateTotal() {
+        lblTotal.setText("Total: $" + String.format("%.2f", cart.calculateTotal()));
     }
 
     public void display() {
