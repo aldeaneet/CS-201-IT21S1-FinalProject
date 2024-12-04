@@ -33,11 +33,12 @@ public class CheckoutView {
     private void initialize() {
         frame = new JFrame("Checkout");
         frame.getContentPane().setBackground(new Color(226, 226, 226));
-        frame.setBounds(100, 100, 600, 500);
+        frame.setBounds(100, 100, 600, 400);
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.getContentPane().setLayout(null);
 
         JLabel lblTitle = new JLabel("Checkout");
+        lblTitle.setForeground(new Color(255, 255, 255));
         lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
         lblTitle.setFont(new Font("Arial Rounded MT Bold", Font.BOLD, 20));
         lblTitle.setBounds(10, 10, 570, 30);
@@ -115,6 +116,11 @@ public class CheckoutView {
         btnBack.setFont(new Font("Arial Rounded MT Bold", Font.PLAIN, 11));
         btnBack.setBounds(380, 300, 150, 40);
         frame.getContentPane().add(btnBack);
+        
+        JPanel panel = new JPanel();
+        panel.setBackground(new Color(0, 0, 0));
+        panel.setBounds(0, 0, 588, 40);
+        frame.getContentPane().add(panel);
 
         btnPlaceOrder.addActionListener(e -> {
             if (cart.getItems().isEmpty()) {
@@ -133,6 +139,18 @@ public class CheckoutView {
             if (name.isEmpty() || phoneOrCard.isEmpty()) {
                 JOptionPane.showMessageDialog(frame, "Please fill in the required payment details.");
                 return;
+            }
+
+            if ("GCash".equals(selectedMethod) && !isValidPhoneNumber(phoneOrCard)) {
+                JOptionPane.showMessageDialog(frame, "Invalid phone number.");
+                return;
+            }
+
+            if ("Credit/Debit Card".equals(selectedMethod)) {
+                if (!isValidCreditCard(phoneOrCard)) {
+                    JOptionPane.showMessageDialog(frame, "Invalid credit card number.");
+                    return;
+                }
             }
 
             boolean stockAvailable = true;
@@ -170,51 +188,76 @@ public class CheckoutView {
     }
 
     private void insertOrderIntoDatabase(String orderId, int customerId, String orderDate, double totalAmount, String status, String paymentMethod, 
-                                         String gcashName, String gcashPhoneNumber, String cardholderName, String cardNumber) {
-        try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String orderQuery = "INSERT INTO orderhistory (orderId, customerId, orderDate, totalAmount, status, paymentMethod, gcashName, gcashPhoneNumber, cardholderName, cardNumber) " +
-                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            try (PreparedStatement orderStmt = connection.prepareStatement(orderQuery)) {
-                orderStmt.setString(1, orderId);
-                orderStmt.setInt(2, customerId);
-                orderStmt.setString(3, orderDate);
-                orderStmt.setDouble(4, totalAmount);
-                orderStmt.setString(5, status);
-                orderStmt.setString(6, paymentMethod);
-                orderStmt.setString(7, gcashName);
-                orderStmt.setString(8, gcashPhoneNumber);
-                orderStmt.setString(9, cardholderName);
-                orderStmt.setString(10, cardNumber);
-                orderStmt.executeUpdate();
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(frame, "Error saving order to the database: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
+            String gcashName, String gcashPhoneNumber, String cardholderName, String cardNumber) {
+				try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+				
+				StringBuilder productsString = new StringBuilder();
+				for (CartItem item : cart.getItems()) {
+					Product product = productCatalog.getProduct(item.getProductId());
+					if (productsString.length() > 0) {
+						productsString.append(", "); 
+				}
+	productsString.append(product.getProductId()).append(": ").append(item.getQuantity());
+	}
 
-    public void display() {
-        frame.setVisible(true);
-    }
+	String orderQuery = "INSERT INTO orderhistory (orderId, customerId, orderDate, totalAmount, status, paymentMethod, products, gcashName, gcashPhoneNumber, cardholderName, cardNumber) " +
+	   "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		try (PreparedStatement orderStmt = connection.prepareStatement(orderQuery)) {
+			orderStmt.setString(1, orderId);
+			orderStmt.setInt(2, customerId);
+			orderStmt.setString(3, orderDate);
+			orderStmt.setDouble(4, totalAmount);
+			orderStmt.setString(5, status);
+			orderStmt.setString(6, paymentMethod);
+			orderStmt.setString(7, productsString.toString());
+			orderStmt.setString(8, gcashName);
+			orderStmt.setString(9, gcashPhoneNumber);
+			orderStmt.setString(10, cardholderName);
+			orderStmt.setString(11, cardNumber);
+			orderStmt.executeUpdate();
+					}
+				} 
+		catch (SQLException e) {
+	JOptionPane.showMessageDialog(frame, "Error placing order in database: " + e.getMessage());
+		}
+	}
 
-    private String getCurrentDateTime() {
-        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-    }
 
     private void updateProductStockInDatabase() {
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
             for (CartItem item : cart.getItems()) {
-                Product product = productCatalog.getProduct(item.getProductId());
-                String updateQuery = "UPDATE products SET stock = stock - ? WHERE product_id = ?";
-                try (PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
-                    updateStmt.setInt(1, item.getQuantity());
-                    updateStmt.setString(2, product.getProductId());
-                    updateStmt.executeUpdate();
+                String productQuery = "UPDATE products SET stock = stock - ? WHERE product_id = ?";
+                try (PreparedStatement productStmt = connection.prepareStatement(productQuery)) {
+                    productStmt.setInt(1, item.getQuantity());
+                    productStmt.setString(2, item.getProductId());
+                    productStmt.executeUpdate();
                 }
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(frame, "Error updating product stock in the database: " + e.getMessage(),
-                    "Database Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "Error updating product stock in database: " + e.getMessage());
         }
+    }
+
+    private boolean isValidPhoneNumber(String phoneNumber) {
+        if (phoneNumber.startsWith("09") && phoneNumber.length() == 11) {
+            return true;
+        }
+        if (phoneNumber.startsWith("63") && phoneNumber.length() == 12 && phoneNumber.charAt(2) == '9') {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isValidCreditCard(String cardNumber) {
+        return cardNumber.length() == 16 && cardNumber.matches("\\d+");
+    }
+
+    private String getCurrentDateTime() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return LocalDateTime.now().format(formatter);
+    }
+
+    public void display() {
+        frame.setVisible(true);
     }
 }
