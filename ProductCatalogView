@@ -108,7 +108,6 @@ public class ProductCatalogView {
 
         btnBack.addActionListener(e -> {
             frame.dispose();
-            new HomeCustomer(user, catalog, shoppingCart).display();
         });
 
         btnSearch.addActionListener(e -> {
